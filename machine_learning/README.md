@@ -210,6 +210,7 @@ There are a few other options available when using the neural network as stand-a
     The possible output variables can be retrieved from the neural network using the following command: 
     `NeuralNetwork.get_output_vars()`. (An overview of the input parameters can be extracted with 
     `NeuralNetwork.get_input_vars()`.)
+    
 *   The `estimate()`-method can also return the (statistics of) the input parameters used for the stochastic approach:
     ```python
     from machine_learning.neural_network import NeuralNetwork
@@ -234,6 +235,7 @@ There are a few other options available when using the neural network as stand-a
         include_input=True  # defaults to False
     )
     ```
+    
 *   The `estimate()`-method can also return the full data set that is used to determine the statistics:
     ```python
     from machine_learning.neural_network import NeuralNetwork
