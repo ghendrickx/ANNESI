@@ -98,7 +98,12 @@ Gijs G. Hendrickx
 [![alt text](https://camo.githubusercontent.com/e1ec0e2167b22db46b0a5d60525c3e4a4f879590a04c370fef77e6a7e00eb234/68747470733a2f2f696e666f2e6f726369642e6f72672f77702d636f6e74656e742f75706c6f6164732f323031392f31312f6f726369645f31367831362e706e67) 0000-0001-9523-7657](https://orcid.org/0000-0001-9523-7657)
 (*Delft University of Technology*)
 
-## Version-control
+## References
+When using this repository, please cite accordingly:
+> Hendrickx, G.G. (2022). ANNESI: An open-source artificial neural network for estuarine salt intrusion. 
+4TU.ResearchData. Software. [doi:10.4121/19307693](https://doi.org/10.4121/19307693).
+
+### Version-control
 The neural network, and so the web-API, are subject to updates. These updates are reflected by different versions of the
 repository.
 
