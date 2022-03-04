@@ -13,7 +13,7 @@ made to host this web-API publicly. The neural network is also available without
 [`machine_learning`](machine_learning)).
 
 ## Requirements
-This sub-repository has the following requirements (see also [`requirements.txt`](requirements.txt)):
+This repository has the following requirements (see also [`requirements.txt`](requirements.txt)):
 *   `numpy==1.19.4`
 *   `pandas==1.1.4`
 *   `torch==1.9.0`
@@ -25,12 +25,9 @@ This sub-repository has the following requirements (see also [`requirements.txt`
 
 *\* Only required for the web-API.*
 
-For the installation of `torch`, please look at there [installation guide](https://pytorch.org/get-started/locally/);
+For the installation of `torch`, please look at their [installation guide](https://pytorch.org/get-started/locally/);
 the installation of `torch` is slightly different from other Python-packages for which a `pip install` suffices. Also
 note that `torch` is only supported for Python 3.7-3.9, and not for Python 2.x (or 3.10).
-
-In addition, the [`utils`](utils)-folder is required for the functioning of the neural network (and thus also for the 
-web-API).
 
 ## Usage
 For the use of the web-API, [`api.py`](api.py) must be executed with Python. This provides a link to a local-host, 
@@ -42,8 +39,8 @@ To use the web-API, the following steps are required:
 1.  Run `api.py` (or `/api.py`).
 
 When running from the command line, you can either (1) first change the directory (`cd`) to the repository and 
-subsequently run `api.py`; or (2) run `api.py` from any location by including the full directory to the file. Option 1
-and option 2 are written-out below, respectively:
+subsequently run `api.py`; or (2) run `api.py` from any location by including the full directory to the file. Both 
+options are written-out below, respectively:
 ```commandline
 cd path/to/repository
 python api.py
@@ -63,8 +60,8 @@ Dash is running on http://127.0.0.1:8050/
  * Running on http://127.0.0.1:8050/ (Press CTRL+C to quit)
 ```
 
-There is also the possibility to use the neural network without the web-API - as stand-alone. For more information on
-this approach, see [`machine_learning`](machine_learning).
+There is also the possibility to use the neural network without the web-API, i.e. as stand-alone. For more information 
+on this approach, see [`machine_learning`](machine_learning).
 
 ## Structure
 The neural network and web-API are located in the folders [`machine_learning`](machine_learning) and 
@@ -102,15 +99,9 @@ Gijs G. Hendrickx
 
 ## References
 When using this repository, please cite accordingly:
-> Hendrickx, G.G. (2022). SALTISolutions: A neural network for estuarine salt dynamics. 4TU.ResearchData. Software.
-[doi:10.4121/19161752](https://doi.org/10.4121/19161752).
+> Hendrickx, G.G. (2022). ANNESI: An open-source artificial neural network for estuarine salt intrusion. 
+4TU.ResearchData. Software. [doi:10.4121/19307693](https://doi.org/10.4121/19307693).
 
 ### Version-control
 The neural network, and so the web-API, are subject to updates. These updates are reflected by different versions of the
 repository.
-
-### Releases
-The releases that affected this sub-repository are:
-1.  Pre-release: [`v0.1-beta`](https://doi.org/10.4121/19161752.v1)
-
-For more information on the different releases, see the [main-repository](../README.md#Releases).
