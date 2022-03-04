@@ -106,3 +106,6 @@ When using this repository, please cite accordingly:
 ### Version-control
 The neural network, and so the web-API, are subject to updates. These updates are reflected by different versions of the
 repository.
+
+## License
+This repository is licensed under [`Apache License 2.0`](LICENSE).
