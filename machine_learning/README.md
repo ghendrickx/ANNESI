@@ -2,8 +2,8 @@
 The neural network can also be used separately from the web-API. This allows for evaluating a wide range of estuarine
 configurations as well as a more stochastic approach.
 
-For this ''limited'' approach, certain requirements from [`requirements.txt`](../requirements.txt) are redundant (see
-[*Requirements*](../README.md#Requirements)).
+For this ''stripped-down'' approach, certain requirements from [`requirements.txt`](../requirements.txt) are redundant 
+(see [*Requirements*](../README.md#Requirements)).
 
 ## Basic usage
 The usage of the neural network requires importing and initialising the `NeuralNetwork` in a straightforward manner:
@@ -40,7 +40,7 @@ prediction = nn.single_predict(
 print(prediction)
 ```
 This will return the salt intrusion length (in metres):
-```commandline
+```
 10934.607982635498
 ```
 
