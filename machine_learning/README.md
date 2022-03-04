@@ -1,19 +1,20 @@
-# Neural network: Estuarine dynamics
+# ANNESI: Artificial neural network for estuarine salt intrusion
 The neural network can also be used separately from the web-API. This allows for evaluating a wide range of estuarine
 configurations as well as a more stochastic approach.
 
-For the requirements, etc., see [`neural_network`](..).
+For this ''stripped-down'' approach, certain requirements from [`requirements.txt`](../requirements.txt) are redundant 
+(see [*Requirements*](../README.md#Requirements)).
 
 ## Basic usage
 The usage of the neural network requires importing and initialising the `NeuralNetwork` in a straightforward manner:
 ```python
-from neural_network.machine_learning.neural_network import NeuralNetwork
+from machine_learning.neural_network import NeuralNetwork
 
 nn = NeuralNetwork()
 ```
 The most basic usage of the neural network encompasses a single prediction, using the `single_predict()`-method:
 ```python
-from neural_network.machine_learning.neural_network import NeuralNetwork
+from machine_learning.neural_network import NeuralNetwork
 
 # initialise neural network
 nn = NeuralNetwork()
@@ -39,7 +40,7 @@ prediction = nn.single_predict(
 print(prediction)
 ```
 This will return the salt intrusion length (in metres):
-```commandline
+```
 10934.607982635498
 ```
 
@@ -66,7 +67,7 @@ columns = [
 In such a case, the `python`-file will look similar to the following MWE:
 ```python
 import pandas as pd
-from neural_network.machine_learning.neural_network import NeuralNetwork
+from machine_learning.neural_network import NeuralNetwork
 
 # define the data set (dummy data, provide real data)
 columns = [
@@ -96,7 +97,7 @@ print(predictions)
 When the data is stored in a file, the neural network is also able to read it directly from the file, as long as the 
 headers in the file correspond to the input parameters, i.e. the above defined `columns`:
 ```python
-from neural_network.machine_learning.neural_network import NeuralNetwork
+from machine_learning.neural_network import NeuralNetwork
 
 # run neural network
 nn = NeuralNetwork()
@@ -115,7 +116,7 @@ In the `estimate()`-method, the input parameters with uncertainty are provided a
 when a range of values is known; or (2) `None` when nothing is known, which results in the neural network using the
 range of the training data set:
 ```python
-from neural_network.machine_learning.neural_network import NeuralNetwork
+from machine_learning.neural_network import NeuralNetwork
 
 nn = NeuralNetwork()
 
@@ -158,7 +159,7 @@ Defined range exceeds training data; "river_discharge" range used: (7750, 15999.
 Note that the above statistics are based on a sample size of only three samples (`count        3.000000`). This is the
 default value, which can be changed, e.g. to 100 samples:
 ```python
-from neural_network.machine_learning.neural_network import NeuralNetwork
+from machine_learning.neural_network import NeuralNetwork
 
 nn = NeuralNetwork()
 
@@ -201,7 +202,7 @@ Name: L, dtype: float64
 There are a few other options available when using the neural network as stand-alone, i.e. separate from the web-API:
 *   Predict multiple output variables/change the output variable(s): 
     ```python
-    from neural_network.machine_learning.neural_network import NeuralNetwork
+    from machine_learning.neural_network import NeuralNetwork
 
     nn = NeuralNetwork()
     nn.output = 'L', 'V'
@@ -209,9 +210,10 @@ There are a few other options available when using the neural network as stand-a
     The possible output variables can be retrieved from the neural network using the following command: 
     `NeuralNetwork.get_output_vars()`. (An overview of the input parameters can be extracted with 
     `NeuralNetwork.get_input_vars()`.)
+    
 *   The `estimate()`-method can also return the (statistics of) the input parameters used for the stochastic approach:
     ```python
-    from neural_network.machine_learning.neural_network import NeuralNetwork
+    from machine_learning.neural_network import NeuralNetwork
 
     nn = NeuralNetwork()
     
@@ -233,9 +235,10 @@ There are a few other options available when using the neural network as stand-a
         include_input=True  # defaults to False
     )
     ```
+    
 *   The `estimate()`-method can also return the full data set that is used to determine the statistics:
     ```python
-    from neural_network.machine_learning.neural_network import NeuralNetwork
+    from machine_learning.neural_network import NeuralNetwork
 
     nn = NeuralNetwork()
     
@@ -258,4 +261,4 @@ There are a few other options available when using the neural network as stand-a
     )
     ```
 
-For more information, see the documentation of the [source code](neural_network.py).
+For more information and options, see the [source code](neural_network.py).
