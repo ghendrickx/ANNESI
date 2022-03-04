@@ -50,7 +50,7 @@ python api.py
 python path/to/repository/api.py
 ```
 This will return the following message, including the link to the locally hosted web-page:
-```commandline
+```
 Dash is running on http://127.0.0.1:8050/
 
  * Serving Flask app 'application.app' (lazy loading)
@@ -80,6 +80,7 @@ The neural network and web-API are located in the folders [`machine_learning`](m
 |   +-- __init__.py
 |   +-- _backend.py
 |   +-- neural_network.py
+|   +-- README.md
 +-- utils/
 |   +-- __init__.py
 |   +-- data_conv.py
