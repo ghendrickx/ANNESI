@@ -9,7 +9,7 @@ import os
 
 def run():
     """Run web-API locally."""
-    from neural_network.application.app import APP
+    from application.app import APP
     APP.run_server()
 
 

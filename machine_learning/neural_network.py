@@ -9,11 +9,11 @@ import logging
 
 import torch
 
-from neural_network.application.components import input_check
+from application.components import input_check
 from utils.files_dirs import DirConfig
 from utils.data_conv import Import
 
-from neural_network.machine_learning._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
+from machine_learning._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
 
 LOG = logging.getLogger(__name__)
 

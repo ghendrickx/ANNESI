@@ -12,8 +12,8 @@ from dash import dcc
 from dash import html
 import dash.dependencies as dep
 
-from neural_network.application.components import AppEstuary, input_check, EstuaryType
-from neural_network.machine_learning.neural_network import NeuralNetwork
+from application.components import AppEstuary, input_check, EstuaryType
+from machine_learning.neural_network import NeuralNetwork
 
 # initiate dash-app
 APP = dash.Dash(__name__)
