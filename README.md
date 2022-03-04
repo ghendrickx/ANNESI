@@ -27,7 +27,8 @@ This repository has the following requirements (see also [`requirements.txt`](re
 
 For the installation of `torch`, please look at their [installation guide](https://pytorch.org/get-started/locally/);
 the installation of `torch` is slightly different from other Python-packages for which a `pip install` suffices. Also
-note that `torch` is only supported for Python 3.7-3.9, and not for Python 2.x (or 3.10).
+note that `torch` is (currently) only supported for `python 3.7`-`3.9`, and not for `python 2.x` (or `3.10`); see the
+[official documentation](https://pytorch.org/get-started/locally/#windows-python) of `torch` for the latest updates.
 
 ## Usage
 For the use of the web-API, [`api.py`](api.py) must be executed with Python. This provides a link to a local-host, 
