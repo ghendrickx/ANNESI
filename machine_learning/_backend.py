@@ -32,6 +32,13 @@ class MLP(torch.nn.Module):
     """Multilayer Perceptron: Default neural network."""
 
     def __init__(self, input_dim, output_dim):
+        """
+        :param input_dim: input dimension
+        :param output_dim: output dimension
+
+        :type input_dim: int
+        :type output_dim: int
+        """
         super().__init__()
 
         hidden_dim = 50
@@ -233,7 +240,6 @@ class Training:
 
 class InputData:
     """Input data object to ensure consistent scaling."""
-
     _scaler = None
     _scaler_is_fitted = False
 

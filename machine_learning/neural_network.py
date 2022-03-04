@@ -55,6 +55,14 @@ class NeuralNetwork:
         """
         self._nn = neural_network
 
+    def __repr__(self):
+        """Object representation."""
+        return f'NeuralNetwork(neural_network={self.nn})'
+
+    def __str__(self):
+        """String representation."""
+        return f'ANNESI: Artificial neural network for estuarine salt intrusion'
+
     @property
     def nn(self):
         """Neural network. When none is specified during the initiation, the default neural network is loaded and used.
@@ -114,9 +122,6 @@ class NeuralNetwork:
 
         # validated custom output
         self._reduced_output_vars = [v for v in out if validation(v)]
-
-    def fit_custom_neural_network(self, epochs, optimiser, loss_function):
-        raise NotImplementedError
 
     def _de_normalise(self, output):
         """De-normalise output data.
