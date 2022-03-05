@@ -416,25 +416,6 @@ class EstuaryType:
         return 'undefined'
 
 
-def _type_check(param, type_):
-    """Check the type of the parameter.
-
-    :param param: parameter
-    :param type_: type
-
-    :type param: typ
-    :type type_: type
-    """
-    if not type(param) == type_:
-        try:
-            param = type_(param)
-        except ValueError:
-            pass
-    if not isinstance(param, type_):
-        msg = f'{param} should be of type {type_}, {type(param)} given.'
-        raise TypeError(msg)
-
-
 def _tidal_prism(tidal_range, depth, width, min_width, friction, convergence):
     """Determination of the tidal prism based on the analytical solutions on the tidal damping by van Rijn (2011).
 
@@ -514,7 +495,7 @@ def input_check(
         doi:https://doi.org/10.1130/G45144.1.
     """
     # type-checks
-    [_type_check(p, float) for p in locals().values()]
+    assert all(isinstance(float(p), float) for p in locals().values())
 
     # input parameters
     params = locals().copy()
