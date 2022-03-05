@@ -143,6 +143,7 @@ for p in _INPUT_VARS:
 
 APP.layout = html.Div([
     html.H1('ANNESI: Artificial neural network for estuarine salt intrusion'),
+    html.Div(f'WARNING: The neural network is still under development.', style={'color': 'red'}),
 
     html.H2('Input'),
     *_SLIDERS,
