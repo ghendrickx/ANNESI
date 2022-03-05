@@ -345,7 +345,7 @@ class EstuaryType:
         """Mixing-parameter as defined by Geyer & MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: mixing-parameter
         :rtype: float
@@ -362,7 +362,7 @@ class EstuaryType:
         """Freshwater Froude number as defined by Geyer & MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: freshwater Froude number
         :rtype: float
@@ -378,7 +378,7 @@ class EstuaryType:
         MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302.
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: estuary type
         :rtype: str
@@ -414,25 +414,6 @@ class EstuaryType:
             return 'well-mixed'
 
         return 'undefined'
-
-
-def _type_check(param, type_):
-    """Check the type of the parameter.
-
-    :param param: parameter
-    :param type_: type
-
-    :type param: typ
-    :type type_: type
-    """
-    if not type(param) == type_:
-        try:
-            param = type_(param)
-        except ValueError:
-            pass
-    if not isinstance(param, type_):
-        msg = f'{param} should be of type {type_}, {type(param)} given.'
-        raise TypeError(msg)
 
 
 def _tidal_prism(tidal_range, depth, width, min_width, friction, convergence):
@@ -514,7 +495,7 @@ def input_check(
         doi:https://doi.org/10.1130/G45144.1.
     """
     # type-checks
-    [_type_check(p, float) for p in locals().values()]
+    assert all(isinstance(float(p), float) for p in locals().values())
 
     # input parameters
     params = locals().copy()
