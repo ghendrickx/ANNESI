@@ -235,7 +235,7 @@ def nn_output(
         convergence=convergence, flat_depth_ratio=flat_depth_ratio, flat_width_ratio=1 + flat_width / channel_width,
         flat_friction=flat_friction, bottom_curvature=bottom_curvature, meander_amplitude=meander_amplitude,
         meander_length=meander_length,
-        step_size=100
+        step_size=1e6
     )
     classification = EstuaryType(estuary)
 
@@ -308,7 +308,7 @@ def update_figure(
         convergence=convergence, flat_depth_ratio=flat_depth_ratio, flat_width_ratio=1 + flat_width / channel_width,
         flat_friction=flat_friction, bottom_curvature=bottom_curvature, meander_amplitude=meander_amplitude,
         meander_length=meander_length,
-        step_size=100
+        step_size=(300, (channel_width + flat_width) / 40)
     )
     fig = go.Figure()
 
