@@ -108,5 +108,24 @@ When using this repository, please cite accordingly:
 The neural network, and so the web-API, are subject to updates. These updates are reflected by different versions of the
 repository.
 
+### Related references
+The standalone neural network is used as part of the following peer-reviewed article:
+*   [Hendrickx, G.G.](https://orcid.org/0000-0001-9523-7657), 
+    [Antol&iacute;nez, J.A.&Aacute;](https://orcid.org/0000-0002-0694-4817), and 
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341). 
+    (TBD). TBD. doi:[TBD]().
+
+The addition of the web-API has also been part of a presentation at the following conference (*presenter in bold-face*):
+*   [**Hendrickx, G.G.**](https://orcid.org/0000-0001-9523-7657), 
+    [Antol&iacute;nez, J.A.&Aacute;](https://orcid.org/0000-0002-0694-4817), 
+    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257), 
+    [Huismans, Y.](https://orcid.org/0000-0001-6537-6111), 
+    [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913), and 
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341). 
+    March 4, 2022.
+    Combining machine learning and process-based models to enhance the understanding of estuarine salt intrusion and
+    development of estuary-scale nature-based solutions. 
+    *Ocean Sciences Meeting 2022*. Online.
+
 ## License
 This repository is licensed under [`Apache License 2.0`](LICENSE).
