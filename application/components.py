@@ -345,7 +345,7 @@ class EstuaryType:
         """Mixing-parameter as defined by Geyer & MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: mixing-parameter
         :rtype: float
@@ -362,7 +362,7 @@ class EstuaryType:
         """Freshwater Froude number as defined by Geyer & MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: freshwater Froude number
         :rtype: float
@@ -378,7 +378,7 @@ class EstuaryType:
         MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302.
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: estuary type
         :rtype: str
