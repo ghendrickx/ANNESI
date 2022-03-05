@@ -20,7 +20,7 @@ class AppEstuary:
 
     def __init__(
             self, channel_depth, channel_width, tidal_range, river_discharge, channel_friction,
-            convergence=None, bottom_curvature=None, flat_width_ratio=None, flat_depth_ratio=None, flat_friction = None,
+            convergence=None, bottom_curvature=None, flat_width_ratio=None, flat_depth_ratio=None, flat_friction=None,
             meander_amplitude=None, meander_length=None, step_size=1
     ):
         """Compressed Estuary-class applicable for the use in the online application.
@@ -51,6 +51,7 @@ class AppEstuary:
         :type meander_length: float, optional
         :type step_size: float, optional
         """
+        assert isinstance(step_size, (float, int)) or len(step_size) == 2
         self._step_size = step_size
 
         self.channel_depth = channel_depth
@@ -167,6 +168,15 @@ class AppEstuary:
         """
         return .5 * self.total_width
 
+    def _dx_dy(self):
+        try:
+            _ = len(self._step_size)
+        except TypeError:
+            return self._step_size, self._step_size
+        else:
+            assert len(self._step_size) == 2
+            return self._step_size
+
     def _meander_wave(self, x):
         """Meandering translation of the y-coordinates based on the meander details.
 
@@ -186,7 +196,8 @@ class AppEstuary:
         :return: (x,y)-coordinates
         :rtype: tuple
         """
-        num_of_points = int((self._ocean_extent + self._length) / self._step_size + 1)
+        dx, _ = self._dx_dy()
+        num_of_points = int((self._ocean_extent + self._length) / dx + 1)
         x = np.linspace(-self._ocean_extent, self._length, num_of_points)
         y = self._meander_wave(x)
         return x, y
@@ -282,7 +293,8 @@ class AppEstuary:
         :return: land boundaries
         :rtype: pandas.DataFrame
         """
-        num_of_points = int((self._ocean_extent + self._length) / self._step_size + 1)
+        dx, _ = self._dx_dy()
+        num_of_points = int((self._ocean_extent + self._length) / dx + 1)
         x = np.linspace(-self._ocean_extent, self._length, num_of_points)
         xy = pd.DataFrame({'x': x})
 
@@ -298,8 +310,9 @@ class AppEstuary:
         :return: bathymetry
         :rtype: pandas.DataFrame
         """
-        x_points = int((self._ocean_extent + self._length) / self._step_size + 1)
-        y_points = int(self.total_width / self._step_size + 1)
+        dx, dy = self._dx_dy()
+        x_points = int((self._ocean_extent + self._length) / dx + 1)
+        y_points = int(self.total_width / dy + 1)
 
         x = np.linspace(-self._ocean_extent, self._length, x_points)
         y = np.linspace(-self._half_total_width, self._half_total_width, y_points)
