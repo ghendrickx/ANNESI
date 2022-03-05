@@ -113,7 +113,8 @@ The standalone neural network is used as part of the following peer-reviewed art
 *   [Hendrickx, G.G.](https://orcid.org/0000-0001-9523-7657), 
     [Antol&iacute;nez, J.A.&Aacute;](https://orcid.org/0000-0002-0694-4817), and 
     [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341). 
-    (TBD). TBD. doi:[TBD]().
+    (2022). Machine learning techniques to aid in the development of nature-based solutions. *Journal*, V(I):pp-pp.
+    doi:[TBD]().
 
 The addition of the web-API has also been part of a presentation at the following conference (*presenter in bold-face*):
 *   [**Hendrickx, G.G.**](https://orcid.org/0000-0001-9523-7657), 
