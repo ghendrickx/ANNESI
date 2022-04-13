@@ -12,7 +12,7 @@ from dash import dcc
 from dash import html
 import dash.dependencies as dep
 
-from application.components import AppEstuary, input_check, EstuaryType
+from application.components import AppEstuary, EstuaryType, input_check
 from machine_learning.neural_network import NeuralNetwork
 
 # initiate dash-app
