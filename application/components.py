@@ -20,7 +20,7 @@ class AppEstuary:
 
     def __init__(
             self, channel_depth, channel_width, tidal_range, river_discharge, channel_friction,
-            convergence=None, bottom_curvature=None, flat_width_ratio=None, flat_depth_ratio=None, flat_friction = None,
+            convergence=None, bottom_curvature=None, flat_width_ratio=None, flat_depth_ratio=None, flat_friction=None,
             meander_amplitude=None, meander_length=None, step_size=1
     ):
         """Compressed Estuary-class applicable for the use in the online application.
@@ -51,6 +51,7 @@ class AppEstuary:
         :type meander_length: float, optional
         :type step_size: float, optional
         """
+        assert isinstance(step_size, (float, int)) or len(step_size) == 2
         self._step_size = step_size
 
         self.channel_depth = channel_depth
@@ -167,6 +168,15 @@ class AppEstuary:
         """
         return .5 * self.total_width
 
+    def _dx_dy(self):
+        try:
+            _ = len(self._step_size)
+        except TypeError:
+            return self._step_size, self._step_size
+        else:
+            assert len(self._step_size) == 2
+            return self._step_size
+
     def _meander_wave(self, x):
         """Meandering translation of the y-coordinates based on the meander details.
 
@@ -186,7 +196,8 @@ class AppEstuary:
         :return: (x,y)-coordinates
         :rtype: tuple
         """
-        num_of_points = int((self._ocean_extent + self._length) / self._step_size + 1)
+        dx, _ = self._dx_dy()
+        num_of_points = int((self._ocean_extent + self._length) / dx + 1)
         x = np.linspace(-self._ocean_extent, self._length, num_of_points)
         y = self._meander_wave(x)
         return x, y
@@ -282,7 +293,8 @@ class AppEstuary:
         :return: land boundaries
         :rtype: pandas.DataFrame
         """
-        num_of_points = int((self._ocean_extent + self._length) / self._step_size + 1)
+        dx, _ = self._dx_dy()
+        num_of_points = int((self._ocean_extent + self._length) / dx + 1)
         x = np.linspace(-self._ocean_extent, self._length, num_of_points)
         xy = pd.DataFrame({'x': x})
 
@@ -298,8 +310,9 @@ class AppEstuary:
         :return: bathymetry
         :rtype: pandas.DataFrame
         """
-        x_points = int((self._ocean_extent + self._length) / self._step_size + 1)
-        y_points = int(self.total_width / self._step_size + 1)
+        dx, dy = self._dx_dy()
+        x_points = int((self._ocean_extent + self._length) / dx + 1)
+        y_points = int(self.total_width / dy + 1)
 
         x = np.linspace(-self._ocean_extent, self._length, x_points)
         y = np.linspace(-self._half_total_width, self._half_total_width, y_points)
@@ -345,7 +358,7 @@ class EstuaryType:
         """Mixing-parameter as defined by Geyer & MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: mixing-parameter
         :rtype: float
@@ -362,7 +375,7 @@ class EstuaryType:
         """Freshwater Froude number as defined by Geyer & MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: freshwater Froude number
         :rtype: float
@@ -378,7 +391,7 @@ class EstuaryType:
         MacCready (2014).
 
         Geyer, W.R., and MacCready, P. (2014). The estuarine circulation. Annual Review of Fluid Mechanics,
-            46(1):175-197. doi:10.1146/annurev-fluid-010313-141302.
+            46(1):175-197. doi:https://doi.org/10.1146/annurev-fluid-010313-141302.
 
         :return: estuary type
         :rtype: str
@@ -414,25 +427,6 @@ class EstuaryType:
             return 'well-mixed'
 
         return 'undefined'
-
-
-def _type_check(param, type_):
-    """Check the type of the parameter.
-
-    :param param: parameter
-    :param type_: type
-
-    :type param: typ
-    :type type_: type
-    """
-    if not type(param) == type_:
-        try:
-            param = type_(param)
-        except ValueError:
-            pass
-    if not isinstance(param, type_):
-        msg = f'{param} should be of type {type_}, {type(param)} given.'
-        raise TypeError(msg)
 
 
 def _tidal_prism(tidal_range, depth, width, min_width, friction, convergence):
@@ -514,7 +508,7 @@ def input_check(
         doi:https://doi.org/10.1130/G45144.1.
     """
     # type-checks
-    [_type_check(p, float) for p in locals().values()]
+    assert all(isinstance(float(p), float) for p in locals().values())
 
     # input parameters
     params = locals().copy()
