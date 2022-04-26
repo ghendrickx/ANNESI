@@ -101,7 +101,12 @@ Gijs G. Hendrickx
 
 Contact: [G.G.Hendrickx@tudelft.nl](mailto:G.G.Hendrickx@tudelft.nl?subject=[GitHub]%20ANNESI).
 
-## Version-control
+## References
+When using this repository, please cite accordingly:
+> Hendrickx, G.G. (2022). ANNESI: An open-source artificial neural network for estuarine salt intrusion. 
+4TU.ResearchData. Software. [doi:10.4121/19307693](https://doi.org/10.4121/19307693).
+
+### Version-control
 The neural network, and so the web-API, are subject to updates. These updates are reflected by different versions of the
 repository.
 
