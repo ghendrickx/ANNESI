@@ -27,7 +27,7 @@ class NeuralNetwork:
     _input_vars = _INPUT_VARS
     _output_vars = _OUTPUT_VARS
 
-    _reduced_output_vars = 'L'
+    _reduced_output_vars = None
     _de_norm = {'L': 8e4, 'V': 30}
 
     def __init__(self, neural_network=None):
@@ -190,7 +190,7 @@ class NeuralNetwork:
 
         # return output estimation
         out = self._de_normalise(df)
-        return out[self.output] if len(self.output) > 1 else out[self.output].values[0]
+        return out[self.output]
 
     def predict(self, data):
         """Predict output.
