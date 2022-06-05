@@ -226,7 +226,7 @@ def nn_output(
     try:
         input_check(**args)
     except ValueError as e:
-        msg = [html.P(arg) for arg in list(*e.args)]
+        msg = [html.P(arg.replace('_', ' ')) for arg in list(*e.args)]
         return None, msg
 
     # estuary classification
