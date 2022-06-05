@@ -45,6 +45,7 @@ _SLIDER_DEFAULT_SETTINGS = {
         'placement': 'top',
         'always_visible': True,
     },
+    'marks': None
 }
 _SLIDER_SETTINGS = {
     'tidal_range': {
