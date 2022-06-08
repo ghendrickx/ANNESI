@@ -21,7 +21,7 @@ def _default_file_name(file_name, default, extension=None):
     :param default: default file name
     :param extension: file extension, defaults to None
 
-    :type file_name: str
+    :type file_name: str, None
     :type default: str
     :type extension: str, optional
 
@@ -39,7 +39,7 @@ def _default_file_name(file_name, default, extension=None):
 
     # return file name
     if not file_name.endswith(extension):
-        return f'{file_name}{extension}'
+        return f'{file_name.split(".")[0]}{extension}'
     return file_name
 
 
