@@ -33,6 +33,14 @@ def nn_input_data():
     )
 
 
+@pytest.fixture
+def nn_input_data_range(nn_input_data):
+    df = pd.DataFrame(data=nn_input_data, index=[0])
+    for _ in range(9):
+        df = df.append(nn_input_data, ignore_index=True)
+    return df
+
+
 """TestClasses"""
 
 
