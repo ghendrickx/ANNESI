@@ -33,6 +33,14 @@ def nn_input_data():
     )
 
 
+@pytest.fixture
+def nn_input_data_range(nn_input_data):
+    df = pd.DataFrame(data=nn_input_data, index=[0])
+    for _ in range(9):
+        df = df.append(nn_input_data, ignore_index=True)
+    return df
+
+
 """TestClasses"""
 
 
@@ -68,22 +76,14 @@ class TestNeuralNetwork:
         out = self.neural_network.single_predict(**nn_input_data)
         assert all(col in ['L'] for col in out.columns)
 
-    def test_predict(self, nn_input_data):
-        df = pd.DataFrame(data=nn_input_data, index=[0])
-        for _ in range(9):
-            df = df.append(nn_input_data, ignore_index=True)
-
-        out = self.neural_network.predict(df)
+    def test_predict(self, nn_input_data_range):
+        out = self.neural_network.predict(nn_input_data_range)
         assert len(out) == 10
         assert all(col in ['L', 'V'] for col in out.columns)
 
-    def test_predict_mod_output(self, nn_input_data):
-        df = pd.DataFrame(data=nn_input_data, index=[0])
-        for _ in range(9):
-            df = df.append(nn_input_data, ignore_index=True)
-
+    def test_predict_mod_output(self, nn_input_data_range):
         self.neural_network.output = 'L'
-        out = self.neural_network.predict(df)
+        out = self.neural_network.predict(nn_input_data_range)
         assert all(col in ['L'] for col in out.columns)
 
     def test_estimate(self, nn_input_data):
