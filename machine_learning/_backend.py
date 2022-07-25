@@ -17,8 +17,7 @@ DEVICE = 'cpu'
 LOG = logging.getLogger(__name__)
 
 WD = DirConfig(__file__).config_dir('_data')
-NN_FILE_NAME = 'nn_default.pkl'
-SCALER_FILE = 'nn_scaler.gz'
+FILE_BASE = 'annesi'
 
 _INPUT_VARS = [
     'tidal_range', 'surge_level', 'river_discharge', 'channel_depth', 'channel_width', 'channel_friction',
@@ -240,10 +239,10 @@ class Training:
         export = Export(WD if directory is None else directory)
 
         if to_pkl:
-            export.to_pkl(self.model, NN_FILE_NAME if file_name is None else file_name)
+            export.to_pkl(self.model, FILE_BASE if file_name is None else file_name)
 
         if to_onnx:
-            export.to_onnx(self.model, NN_FILE_NAME if file_name is None else file_name, _INPUT_VARS, _OUTPUT_VARS)
+            export.to_onnx(self.model, FILE_BASE if file_name is None else file_name, _INPUT_VARS, _OUTPUT_VARS)
 
 
 class InputData:
@@ -327,7 +326,7 @@ class InputData:
 
             if input('Save scaler? [y/n] ') == 'y':
                 if input('Overwrite internal scaler? [y/n] ') == 'y':
-                    Export(WD).to_gz(cls._scaler, file_name=SCALER_FILE)
+                    Export(WD).to_gz(cls._scaler, file_name=FILE_BASE)
                 else:
                     directory = input('Provide directory: ')
                     file_name = input('Provide file name: ')
@@ -364,5 +363,5 @@ class InputData:
     @classmethod
     def _load(cls):
         """Load scaler data."""
-        cls._scaler = Import(WD).from_gz(file_name=SCALER_FILE)
+        cls._scaler = Import(WD).from_gz(file_name=FILE_BASE)
         cls._scaler_is_fitted = True
