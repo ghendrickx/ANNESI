@@ -129,7 +129,7 @@ class Export(_DataConversion):
         :return: *.pkl-file
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='nn_default.pkl')
+        file_name = _default_file_name(file_name, default='annesi.pkl')
 
         # export neural network
         torch.save(neural_network.state_dict(), self._wd.config_dir(file_name))
@@ -208,7 +208,7 @@ class Import(_DataConversion):
         :rtype: torch.nn.Module
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='nn_default.pkl')
+        file_name = _default_file_name(file_name, default='annesi.pkl')
 
         # import neural network
         model.load_state_dict(torch.load(self._wd.config_dir(file_name)))
