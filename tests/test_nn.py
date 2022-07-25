@@ -71,6 +71,15 @@ class TestNeuralNetwork:
         assert len(out) == 1
         assert all(col in ['L', 'V'] for col in out.columns)
 
+    def test_single_predict_warn(self, nn_input_data, caplog):
+        nn_input_data.update({
+            'channel_depth': 5,
+            'river_discharge': 16000,
+        })
+        with caplog.at_level(logging.CRITICAL):
+            self.neural_network.single_predict(**nn_input_data)
+        assert 'use output with caution!' in caplog.text.lower()
+
     def test_single_predict_mod_output(self, nn_input_data):
         self.neural_network.output = 'L'
         out = self.neural_network.single_predict(**nn_input_data)
@@ -85,6 +94,13 @@ class TestNeuralNetwork:
         self.neural_network.output = 'L'
         out = self.neural_network.predict(nn_input_data_range)
         assert all(col in ['L'] for col in out.columns)
+
+    def test_predict_warn(self, nn_input_data_range, caplog):
+        nn_input_data_range['channel_depth'] = 5
+        nn_input_data_range['river_discharge'] = 16000
+        with caplog.at_level(logging.CRITICAL):
+            self.neural_network.predict(nn_input_data_range)
+        assert 'use output with caution!' in caplog.text.lower()
 
     def test_estimate(self, nn_input_data):
         nn_input_data['river_discharge'] = [7750, 20000]
