@@ -13,7 +13,7 @@ from utils.check import input_check
 from utils.files_dirs import DirConfig
 from utils.data_conv import Import, Export
 
-from machine_learning._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
+from src._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
 
 LOG = logging.getLogger(__name__)
 

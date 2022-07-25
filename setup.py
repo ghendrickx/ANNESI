@@ -17,7 +17,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=[
-        'application', 'machine_learning', 'utils',
+        'application', 'src', 'utils',
     ],
     license='Apache-2.0',
     keywords=[],

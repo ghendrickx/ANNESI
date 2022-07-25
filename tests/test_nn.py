@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 import torch
 
-from machine_learning.neural_network import NeuralNetwork
+from src.neural_network import NeuralNetwork
 
 """pytest.fixtures"""
 
