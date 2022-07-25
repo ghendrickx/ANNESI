@@ -374,3 +374,38 @@ class NeuralNetwork:
         :rtype: tuple
         """
         return cls._output_vars
+
+    def save_as(self, f_type, file_name=None, directory=None):
+        """Save neural network as one of the available export-formats:
+         1. *.onnx  :   for integration of neural network in a website.
+         2. *.pkl   :   for usage within Python, using PyTorch.
+
+        :param f_type: file-type
+        :param file_name: file-name, defaults to None
+        :param directory: directory, defaults to None
+
+        :type f_type: str
+        :type file_name: str, optional
+        :type directory: DirConfig, str, iterable[str], optional
+        """
+        # check available export-formats
+        f_types = ('onnx', 'pkl')
+        if f_type not in f_types:
+            msg = f'NeuralNetwork can only be saved as {f_types}, {f_type} has been specified.'
+            raise NotImplementedError(msg)
+
+        # internally save neural network
+        if directory == 'internal-save':
+            msg = 'About to save neural network internally. This might overwrite an existing version. Continue? [y/n]'
+            if input(msg) == 'y':
+                directory = _WD
+            else:
+                msg = 'Internally saving neural network aborted.'
+                raise KeyboardInterrupt(msg)
+
+        # export neural network
+        export = Export(directory)
+        if f_type == 'onnx':
+            export.to_onnx(self.nn, file_name=file_name)
+        elif f_type == 'pkl':
+            export.to_pkl(self.nn, file_name=file_name)
