@@ -9,11 +9,11 @@ import logging
 
 import torch
 
-from application.components import input_check
+from utils.check import input_check
 from utils.files_dirs import DirConfig
-from utils.data_conv import Import
+from utils.data_conv import Import, Export
 
-from machine_learning._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
+from src._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
 
 LOG = logging.getLogger(__name__)
 
@@ -23,7 +23,6 @@ class NeuralNetwork:
     simulations using Delft3D Flexible Mesh (DFM). The DFM-simulations encompass idealised estuaries, and wide-ranging
     sets of parameters are evaluated.
     """
-
     _input_vars = _INPUT_VARS
     _output_vars = _OUTPUT_VARS
 
@@ -120,6 +119,10 @@ class NeuralNetwork:
             LOG.critical(f'Unavailable output variable: \"{key}\": Skipped.\n\tChoose one of {_OUTPUT_VARS}')
             return False
 
+        # single output definition
+        if isinstance(out, str):
+            out = [out]
+
         # validated custom output
         self._reduced_output_vars = [v for v in out if validation(v)]
 
@@ -178,7 +181,9 @@ class NeuralNetwork:
         input_data = [v for k, v in locals().items() if k in self._input_vars]
 
         # physical input check
-        input_check(*input_data)
+        msg = input_check(*input_data)
+        if len(msg) > 0:
+            LOG.critical(f'Input is considered physically invalid; use output with caution!')
 
         # normalise data
         norm_input = InputData.normalise([input_data])
@@ -202,7 +207,9 @@ class NeuralNetwork:
         :rtype: pandas.DataFrame
         """
         # physical input check
-        data.apply(lambda row: input_check(*row[_INPUT_VARS]), axis=1)
+        msg = data.apply(lambda row: input_check(*row[_INPUT_VARS]), axis=1)
+        if len(msg[msg.astype(bool)]) > 0:
+            LOG.critical(f'Input is considered physically invalid; use output with caution!')
 
         # normalise data
         norm_data = InputData.normalise(data)
@@ -304,21 +311,22 @@ class NeuralNetwork:
             :return: input parameters, None
             :rtype: list, NoneType
             """
-            try:
-                # model configuration check: physical soundness
-                input_check(*args)
-            except ValueError:
+            # model configuration check: physical soundness
+            msg = input_check(*args)
+
+            if msg:
                 # model configuration check: failed
                 LOG.info(f'Physical input check failed: {args}')
                 return None
-            else:
-                # model configuration check: passed
-                return args
 
-        # determine estimate when all input parameters are provided
-        if all(isinstance(value, (float, int)) for key, value in locals().items() if key in self._input_vars):
-            return self.single_predict(**{key: value for key, value in locals().items() if key in self._input_vars})
+            # model configuration check: passed
+            return args
 
+        # return `single_predict` when all input parameters are provided
+        if all(isinstance(v, (float, int)) for k, v in locals().items() if k in self._input_vars):
+            return self.single_predict(**{k: v for k, v in locals().items() if k in self._input_vars})
+
+        # define input space
         scaler = InputData.get_scaler()
         arrays = dict()
         for i, var in enumerate(self._input_vars):
@@ -339,7 +347,7 @@ class NeuralNetwork:
 
         # create and check model configurations
         df = pd.DataFrame(
-            data=np.array(np.meshgrid(*[val for val in arrays.values()])).T.reshape(-1, len(arrays)),
+            data=np.array(np.meshgrid(*[v for v in arrays.values()])).T.reshape(-1, len(arrays)),
             columns=list(self._input_vars)
         )
         df = df.apply(lambda row: check(*[row[p] for p in self._input_vars]), axis=1, result_type='broadcast')
@@ -370,3 +378,38 @@ class NeuralNetwork:
         :rtype: tuple
         """
         return cls._output_vars
+
+    def save_as(self, f_type, file_name=None, directory=None):
+        """Save neural network as one of the available export-formats:
+         1. *.onnx  :   for integration of neural network in a website.
+         2. *.pkl   :   for usage within Python, using PyTorch.
+
+        :param f_type: file-type
+        :param file_name: file-name, defaults to None
+        :param directory: directory, defaults to None
+
+        :type f_type: str
+        :type file_name: str, optional
+        :type directory: DirConfig, str, iterable[str], optional
+        """
+        # check available export-formats
+        f_types = ('onnx', 'pkl')
+        if f_type not in f_types:
+            msg = f'NeuralNetwork can only be saved as {f_types}, {f_type} has been specified.'
+            raise NotImplementedError(msg)
+
+        # internally save neural network
+        if directory == 'internal-save':
+            msg = 'About to save neural network internally. This might overwrite an existing version. Continue? [y/n]'
+            if input(msg) == 'y':
+                directory = WD
+            else:
+                msg = 'Internally saving neural network aborted.'
+                raise KeyboardInterrupt(msg)
+
+        # export neural network
+        export = Export(directory)
+        if f_type == 'onnx':
+            export.to_onnx(self.nn, file_name=file_name)
+        elif f_type == 'pkl':
+            export.to_pkl(self.nn, file_name=file_name)
