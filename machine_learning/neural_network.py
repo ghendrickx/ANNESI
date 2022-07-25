@@ -9,7 +9,7 @@ import logging
 
 import torch
 
-from application.components import input_check
+from utils.check import input_check
 from utils.files_dirs import DirConfig
 from utils.data_conv import Import, Export
 
@@ -182,7 +182,9 @@ class NeuralNetwork:
         input_data = [v for k, v in locals().items() if k in self._input_vars]
 
         # physical input check
-        input_check(*input_data)
+        msg = input_check(*input_data)
+        if len(msg) > 0:
+            LOG.critical(f'Input is considered physically invalid; use output with caution!')
 
         # normalise data
         norm_input = InputData.normalise([input_data])
@@ -206,7 +208,9 @@ class NeuralNetwork:
         :rtype: pandas.DataFrame
         """
         # physical input check
-        data.apply(lambda row: input_check(*row[_INPUT_VARS]), axis=1)
+        msg = data.apply(lambda row: input_check(*row[_INPUT_VARS]), axis=1)
+        if len(msg[msg.astype(bool)]) > 0:
+            LOG.critical(f'Input is considered physically invalid; use output with caution!')
 
         # normalise data
         norm_data = InputData.normalise(data)
@@ -308,16 +312,16 @@ class NeuralNetwork:
             :return: input parameters, None
             :rtype: list, NoneType
             """
-            try:
-                # model configuration check: physical soundness
-                input_check(*args)
-            except ValueError:
+            # model configuration check: physical soundness
+            msg = input_check(*args)
+
+            if msg:
                 # model configuration check: failed
                 LOG.info(f'Physical input check failed: {args}')
                 return None
-            else:
-                # model configuration check: passed
-                return args
+
+            # model configuration check: passed
+            return args
 
         # determine estimate when all input parameters are provided
         if all(isinstance(value, (float, int)) for key, value in locals().items() if key in self._input_vars):
