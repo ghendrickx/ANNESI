@@ -224,18 +224,26 @@ class Training:
         y = self.model(x)
         return y.detach().cpu()
 
-    def save(self, file_name=None, directory=None):
+    def save(self, file_name=None, directory=None, to_pkl=True, to_onnx=True):
         """Save trained neural network.
 
         :param file_name: file name, defaults to None
         :param directory: directory, defaults to None
+        :param to_pkl: save as *.pkl-file, defaults to True
+        :param to_onnx: save as *.onnx-file, defaults to True
 
         :type file_name: str, optional
         :type directory: DirConfig, str, list[str], tuple[str], optional
+        :type to_pkl: bool, optional
+        :type to_onnx: bool, optional
         """
         export = Export(WD if directory is None else directory)
 
-        export.to_pkl(self.model, NN_FILE_NAME if file_name is None else file_name)
+        if to_pkl:
+            export.to_pkl(self.model, NN_FILE_NAME if file_name is None else file_name)
+
+        if to_onnx:
+            export.to_onnx(self.model, NN_FILE_NAME if file_name is None else file_name, _INPUT_VARS, _OUTPUT_VARS)
 
 
 class InputData:
