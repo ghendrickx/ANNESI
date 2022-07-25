@@ -128,6 +128,39 @@ class Export(_DataConversion):
 
         self._log(file_name)
 
+    def to_onnx(self, neural_network, file_name=None, input_names=None, output_names=None):
+        """Save neural network as *.onnx for use on a (static) web-page.
+
+        :param neural_network: neural network
+        :param file_name: file-name, defaults to None
+        :param input_names: names of input parameters, defaults to None
+        :param output_names: names of output parameters, defaults to None
+
+        :type neural_network: torch.nn.Module
+        :type file_name: str, optional
+        :type input_names: iterable[str]
+        :type output_names: iterable[str]
+
+        :return: *.onnx-file
+        """
+        import torch
+
+        file_name = _default_file_name(file_name, default='annesi.onnx')
+
+        # ensure neural network is in inference-mode
+        neural_network.eval()
+        # define dummy input to trace the graph
+        dummy_input = torch.randn(1, neural_network.features[0].in_features)
+
+        # export neural network to ONNX
+        torch.onnx.export(
+            neural_network, dummy_input, self.working_dir.config_dir(file_name),
+            input_names=input_names, output_names=output_names
+        )
+
+        # log export
+        self._log(file_name)
+
 
 class Import(_DataConversion):
     """Importing data/files."""
