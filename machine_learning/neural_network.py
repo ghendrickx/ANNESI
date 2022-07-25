@@ -23,7 +23,6 @@ class NeuralNetwork:
     simulations using Delft3D Flexible Mesh (DFM). The DFM-simulations encompass idealised estuaries, and wide-ranging
     sets of parameters are evaluated.
     """
-
     _input_vars = _INPUT_VARS
     _output_vars = _OUTPUT_VARS
 
@@ -323,10 +322,11 @@ class NeuralNetwork:
             # model configuration check: passed
             return args
 
-        # determine estimate when all input parameters are provided
-        if all(isinstance(value, (float, int)) for key, value in locals().items() if key in self._input_vars):
-            return self.single_predict(**{key: value for key, value in locals().items() if key in self._input_vars})
+        # return `single_predict` when all input parameters are provided
+        if all(isinstance(v, (float, int)) for k, v in locals().items() if k in self._input_vars):
+            return self.single_predict(**{k: v for k, v in locals().items() if k in self._input_vars})
 
+        # define input space
         scaler = InputData.get_scaler()
         arrays = dict()
         for i, var in enumerate(self._input_vars):
@@ -347,7 +347,7 @@ class NeuralNetwork:
 
         # create and check model configurations
         df = pd.DataFrame(
-            data=np.array(np.meshgrid(*[val for val in arrays.values()])).T.reshape(-1, len(arrays)),
+            data=np.array(np.meshgrid(*[v for v in arrays.values()])).T.reshape(-1, len(arrays)),
             columns=list(self._input_vars)
         )
         df = df.apply(lambda row: check(*[row[p] for p in self._input_vars]), axis=1, result_type='broadcast')
