@@ -132,12 +132,16 @@ class Training:
         :type directory: DirConfig, str, list[str], tuple[str], optional
         :type test_size: float, optional
         """
+        # load data from file
         file_name = 'nn_data.csv' if file_name is None else file_name
         file = DirConfig(WD if directory is None else directory).config_dir(file_name)
         df = pd.read_csv(file)
 
+        # normalise input data
         x = InputData.normalise(df[_INPUT_VARS if x_cols is None else x_cols])
         y = df[_OUTPUT_VARS if y_cols is None else y_cols].to_numpy()
+
+        # split data in training and testing data
         self._x_train, self._x_test, self._y_train, self._y_test = train_test_split(x, y, test_size=test_size)
 
     def fit(self, epochs, x_train=None, y_train=None, random_sample_size=None):
@@ -157,30 +161,42 @@ class Training:
         :return: losses for every iteration
         :rtype: list
         """
+        # set training data
         x_train = self._x_train if x_train is None else x_train
         y_train = self._y_train if y_train is None else y_train
+
+        # set/determine sample sizes
         n_train = len(x_train)
         random_sample_size = int(.1 * n_train) if random_sample_size is None else random_sample_size
 
+        # initiate list of losses
         loss_list = []
 
+        # train neural network
         for epoch in range(epochs):
+            # reset optimiser: reset all gradients to zero
             self.optimiser.zero_grad()
 
+            # randomly select samples from training data
             sel = np.random.choice(range(n_train), random_sample_size)
             x = torch.tensor(x_train[sel]).float().to(DEVICE)
             y_true = torch.tensor(y_train[sel]).float().to(DEVICE)
 
+            # determine model's prediction
             y = self.model(x)
 
+            # calculate losses/errors
             loss = self.loss_function(y, y_true)
 
+            # back-propagate information to learn
             loss.backward()
             self.optimiser.step()
 
+            # append performance
             loss_list.append(float(loss.detach().cpu()))
             LOG.info(f'Training\t:\tepoch {epoch}; loss = {loss:.4f}')
 
+        # return list of losses: model's performance
         return loss_list
 
     def test(self, x_test=None, y_test=None):
@@ -196,17 +212,22 @@ class Training:
         :return: losses of test data
         :rtype: float
         """
+        # set testing data
         x_test = self._x_test if x_test is None else x_test
         y_test = self._y_test if y_test is None else y_test
 
+        # translate testing data to `torch.tensor`-objects
         x = torch.tensor(x_test).float().to(DEVICE)
         y_true = torch.tensor(y_test).float().to(DEVICE)
 
+        # determine model's prediction
         y = self.model(x)
 
+        # determine model's performance
         loss = self.loss_function(y, y_true)
         loss = float(loss.detach().cpu())
 
+        # return model's performance
         LOG.info(f'Testing result (mean)\t:\t{loss:.4f}')
         return loss
 
