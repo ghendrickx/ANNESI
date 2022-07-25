@@ -120,6 +120,10 @@ class NeuralNetwork:
             LOG.critical(f'Unavailable output variable: \"{key}\": Skipped.\n\tChoose one of {_OUTPUT_VARS}')
             return False
 
+        # single output definition
+        if isinstance(out, str):
+            out = [out]
+
         # validated custom output
         self._reduced_output_vars = [v for v in out if validation(v)]
 
