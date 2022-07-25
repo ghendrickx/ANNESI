@@ -31,17 +31,17 @@ _OUTPUT_VARS = ['L', 'V']
 class MLP(torch.nn.Module):
     """Multilayer Perceptron: Default neural network."""
 
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim, output_dim, hidden_dim=50):
         """
-        :param input_dim: input dimension
-        :param output_dim: output dimension
+        :param input_dim: dimension of input data
+        :param output_dim: dimension of output data
+        :param hidden_dim: hidden dimensions
 
         :type input_dim: int
         :type output_dim: int
+        :type hidden_dim: int
         """
         super().__init__()
-
-        hidden_dim = 50
 
         self.features = torch.nn.Sequential(
             torch.nn.Linear(input_dim, hidden_dim),
