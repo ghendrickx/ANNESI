@@ -368,6 +368,7 @@ class InputData:
                 cls._load()
             except FileNotFoundError:
                 LOG.critical(f'Scaler file not found; normalisation not possible.')
+                cls._scaler_is_fitted = False
                 return None
 
         return cls._scaler.transform(data)
@@ -380,6 +381,7 @@ class InputData:
                 cls._load()
             except FileNotFoundError:
                 LOG.critical(f'Scaler file not found; no scaler defined.')
+                cls._scaler_is_fitted = False
 
     @classmethod
     def _load(cls):
