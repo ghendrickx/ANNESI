@@ -88,10 +88,13 @@ class Export(_DataConversion):
 
         :return: *.csv-file
         """
+        # default file-name
         file_name = _default_file_name(file_name, default='output.csv')
 
+        # export data set
         data.to_csv(self._wd.config_dir(file_name), **kwargs)
 
+        # log export
         self._log(file_name)
 
     def to_gz(self, scaler, file_name=None):
@@ -105,14 +108,17 @@ class Export(_DataConversion):
 
         :return: *.gz-file
         """
+        # default file-name
         file_name = _default_file_name(file_name, default='scaler.gz')
 
+        # export scaler
         joblib.dump(scaler, self._wd.config_dir(file_name))
 
+        # log export
         self._log(file_name)
 
     def to_pkl(self, neural_network, file_name=None):
-        """
+        """Save nueral network as *.pkl for use within a Python environment.
 
         :param neural_network: neural network
         :param file_name: file name, defaults to None
@@ -120,12 +126,15 @@ class Export(_DataConversion):
         :type neural_network: torch.nn.Module
         :type file_name: str, optional
 
-        :return: *.??-file
+        :return: *.pkl-file
         """
+        # default file-name
         file_name = _default_file_name(file_name, default='nn_default.pkl')
 
+        # export neural network
         torch.save(neural_network.state_dict(), self._wd.config_dir(file_name))
 
+        # log export
         self._log(file_name)
 
     def to_onnx(self, neural_network, file_name=None, input_names=None, output_names=None):
@@ -143,8 +152,7 @@ class Export(_DataConversion):
 
         :return: *.onnx-file
         """
-        import torch
-
+        # default file-name
         file_name = _default_file_name(file_name, default='annesi.onnx')
 
         # ensure neural network is in inference-mode
@@ -175,12 +183,16 @@ class Import(_DataConversion):
         :return: scaler
         :rtype: BaseEstimator
         """
+        # default file-name
         file_name = _default_file_name(file_name, default='scaler.gz')
 
+        # import scaler
         scaler = joblib.load(self._wd.config_dir(file_name))
 
+        # log import
         self._log(file_name)
 
+        # return scaler
         return scaler
 
     def from_pkl(self, model, file_name=None):
@@ -195,10 +207,14 @@ class Import(_DataConversion):
         :return: trained neural network
         :rtype: torch.nn.Module
         """
+        # default file-name
         file_name = _default_file_name(file_name, default='nn_default.pkl')
 
+        # import neural network
         model.load_state_dict(torch.load(self._wd.config_dir(file_name)))
 
+        # log import
         self._log(file_name)
 
+        # return neural network
         return model
