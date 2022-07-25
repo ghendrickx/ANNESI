@@ -11,7 +11,7 @@ import torch
 
 from application.components import input_check
 from utils.files_dirs import DirConfig
-from utils.data_conv import Import
+from utils.data_conv import Import, Export
 
 from machine_learning._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
 
@@ -398,7 +398,7 @@ class NeuralNetwork:
         if directory == 'internal-save':
             msg = 'About to save neural network internally. This might overwrite an existing version. Continue? [y/n]'
             if input(msg) == 'y':
-                directory = _WD
+                directory = WD
             else:
                 msg = 'Internally saving neural network aborted.'
                 raise KeyboardInterrupt(msg)
