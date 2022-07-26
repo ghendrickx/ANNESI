@@ -13,7 +13,7 @@ from dash import html
 import dash.dependencies as dep
 
 from application.components import AppEstuary, EstuaryType, input_check
-from machine_learning.neural_network import NeuralNetwork
+from src.neural_network import NeuralNetwork
 
 # initiate dash-app
 APP = dash.Dash(__name__)
@@ -45,6 +45,7 @@ _SLIDER_DEFAULT_SETTINGS = {
         'placement': 'top',
         'always_visible': True,
     },
+    'marks': None
 }
 _SLIDER_SETTINGS = {
     'tidal_range': {
@@ -225,7 +226,7 @@ def nn_output(
     try:
         input_check(**args)
     except ValueError as e:
-        msg = [html.P(arg) for arg in list(*e.args)]
+        msg = [html.P(arg.replace('_', ' ')) for arg in list(*e.args)]
         return None, msg
 
     # estuary classification

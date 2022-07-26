@@ -10,7 +10,7 @@ of approximately 2,000 simulations with
 
 The neural network is accessible via a web-API that can be locally hosted by running [`api.py`](api.py). Efforts are 
 made to host this web-API publicly. The neural network is also available without the web-API (see
-[`machine_learning`](machine_learning)).
+[`src`](src)).
 
 ## Requirements
 This repository has the following requirements (see also [`requirements.txt`](requirements.txt)):
@@ -62,10 +62,10 @@ Dash is running on http://127.0.0.1:8050/
 ```
 
 There is also the possibility to use the neural network without the web-API, i.e. as stand-alone. For more information 
-on this approach, see [`machine_learning`](machine_learning).
+on this approach, see [`src`](src).
 
 ## Structure
-The neural network and web-API are located in the folders [`machine_learning`](machine_learning) and 
+The neural network and web-API are located in the folders [`src`](src) and 
 [`application`](application), respectively:
 ```
 +-- application/

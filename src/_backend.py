@@ -17,8 +17,7 @@ DEVICE = 'cpu'
 LOG = logging.getLogger(__name__)
 
 WD = DirConfig(__file__).config_dir('_data')
-NN_FILE_NAME = 'nn_default.pkl'
-SCALER_FILE = 'nn_scaler.gz'
+FILE_BASE = 'annesi'
 
 _INPUT_VARS = [
     'tidal_range', 'surge_level', 'river_discharge', 'channel_depth', 'channel_width', 'channel_friction',
@@ -31,17 +30,17 @@ _OUTPUT_VARS = ['L', 'V']
 class MLP(torch.nn.Module):
     """Multilayer Perceptron: Default neural network."""
 
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim, output_dim, hidden_dim=50):
         """
-        :param input_dim: input dimension
-        :param output_dim: output dimension
+        :param input_dim: dimension of input data
+        :param output_dim: dimension of output data
+        :param hidden_dim: hidden dimensions
 
         :type input_dim: int
         :type output_dim: int
+        :type hidden_dim: int
         """
         super().__init__()
-
-        hidden_dim = 50
 
         self.features = torch.nn.Sequential(
             torch.nn.Linear(input_dim, hidden_dim),
@@ -133,12 +132,16 @@ class Training:
         :type directory: DirConfig, str, list[str], tuple[str], optional
         :type test_size: float, optional
         """
+        # load data from file
         file_name = 'nn_data.csv' if file_name is None else file_name
         file = DirConfig(WD if directory is None else directory).config_dir(file_name)
         df = pd.read_csv(file)
 
+        # normalise input data
         x = InputData.normalise(df[_INPUT_VARS if x_cols is None else x_cols])
         y = df[_OUTPUT_VARS if y_cols is None else y_cols].to_numpy()
+
+        # split data in training and testing data
         self._x_train, self._x_test, self._y_train, self._y_test = train_test_split(x, y, test_size=test_size)
 
     def fit(self, epochs, x_train=None, y_train=None, random_sample_size=None):
@@ -158,30 +161,42 @@ class Training:
         :return: losses for every iteration
         :rtype: list
         """
+        # set training data
         x_train = self._x_train if x_train is None else x_train
         y_train = self._y_train if y_train is None else y_train
+
+        # set/determine sample sizes
         n_train = len(x_train)
         random_sample_size = int(.1 * n_train) if random_sample_size is None else random_sample_size
 
+        # initiate list of losses
         loss_list = []
 
+        # train neural network
         for epoch in range(epochs):
+            # reset optimiser: reset all gradients to zero
             self.optimiser.zero_grad()
 
+            # randomly select samples from training data
             sel = np.random.choice(range(n_train), random_sample_size)
             x = torch.tensor(x_train[sel]).float().to(DEVICE)
             y_true = torch.tensor(y_train[sel]).float().to(DEVICE)
 
+            # determine model's prediction
             y = self.model(x)
 
+            # calculate losses/errors
             loss = self.loss_function(y, y_true)
 
+            # back-propagate information to learn
             loss.backward()
             self.optimiser.step()
 
+            # append performance
             loss_list.append(float(loss.detach().cpu()))
             LOG.info(f'Training\t:\tepoch {epoch}; loss = {loss:.4f}')
 
+        # return list of losses: model's performance
         return loss_list
 
     def test(self, x_test=None, y_test=None):
@@ -197,17 +212,22 @@ class Training:
         :return: losses of test data
         :rtype: float
         """
+        # set testing data
         x_test = self._x_test if x_test is None else x_test
         y_test = self._y_test if y_test is None else y_test
 
+        # translate testing data to `torch.tensor`-objects
         x = torch.tensor(x_test).float().to(DEVICE)
         y_true = torch.tensor(y_test).float().to(DEVICE)
 
+        # determine model's prediction
         y = self.model(x)
 
+        # determine model's performance
         loss = self.loss_function(y, y_true)
         loss = float(loss.detach().cpu())
 
+        # return model's performance
         LOG.info(f'Testing result (mean)\t:\t{loss:.4f}')
         return loss
 
@@ -224,18 +244,26 @@ class Training:
         y = self.model(x)
         return y.detach().cpu()
 
-    def save(self, file_name=None, directory=None):
+    def save(self, file_name=None, directory=None, to_pkl=True, to_onnx=True):
         """Save trained neural network.
 
         :param file_name: file name, defaults to None
         :param directory: directory, defaults to None
+        :param to_pkl: save as *.pkl-file, defaults to True
+        :param to_onnx: save as *.onnx-file, defaults to True
 
         :type file_name: str, optional
         :type directory: DirConfig, str, list[str], tuple[str], optional
+        :type to_pkl: bool, optional
+        :type to_onnx: bool, optional
         """
         export = Export(WD if directory is None else directory)
 
-        export.to_pkl(self.model, NN_FILE_NAME if file_name is None else file_name)
+        if to_pkl:
+            export.to_pkl(self.model, FILE_BASE if file_name is None else file_name)
+
+        if to_onnx:
+            export.to_onnx(self.model, FILE_BASE if file_name is None else file_name, _INPUT_VARS, _OUTPUT_VARS)
 
 
 class InputData:
@@ -319,7 +347,7 @@ class InputData:
 
             if input('Save scaler? [y/n] ') == 'y':
                 if input('Overwrite internal scaler? [y/n] ') == 'y':
-                    Export(WD).to_gz(cls._scaler, file_name=SCALER_FILE)
+                    Export(WD).to_gz(cls._scaler, file_name=FILE_BASE)
                 else:
                     directory = input('Provide directory: ')
                     file_name = input('Provide file name: ')
@@ -340,6 +368,7 @@ class InputData:
                 cls._load()
             except FileNotFoundError:
                 LOG.critical(f'Scaler file not found; normalisation not possible.')
+                cls._scaler_is_fitted = False
                 return None
 
         return cls._scaler.transform(data)
@@ -352,9 +381,10 @@ class InputData:
                 cls._load()
             except FileNotFoundError:
                 LOG.critical(f'Scaler file not found; no scaler defined.')
+                cls._scaler_is_fitted = False
 
     @classmethod
     def _load(cls):
         """Load scaler data."""
-        cls._scaler = Import(WD).from_gz(file_name=SCALER_FILE)
+        cls._scaler = Import(WD).from_gz(file_name=FILE_BASE)
         cls._scaler_is_fitted = True
