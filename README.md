@@ -4,26 +4,20 @@ information, see the [central repository](https://github.com/ghendrickx/SALTISol
 
 Part of this research is a sensitivity analysis of estuarine salt intrusion to estuarine characteristics. As a 
 by-product of the sensitivity analysis, a neural network has been trained to the elaborate data set created, consisting 
-of approximately 2,000 simulations with 
-[Delft3D Flexible Mesh](https://www.deltares.nl/en/software/delft3d-flexible-mesh-suite/) (specifically the 
-[D-Flow module](https://www.deltares.nl/en/software/module/d-flow-flexible-mesh/)).
+of 2,000 simulations with [Delft3D Flexible Mesh](https://www.deltares.nl/en/software/delft3d-flexible-mesh-suite/) 
+(specifically the [D-Flow module](https://www.deltares.nl/en/software/module/d-flow-flexible-mesh/)).
 
-The neural network is accessible via a web-API that can be locally hosted by running [`api.py`](api.py). Efforts are 
-made to host this web-API publicly. The neural network is also available without the web-API (see
-[`src`](src)).
+The neural network is contained in this repository but is accessible via a web-API on the website of 
+[SALTISolutions]() of which the `GitHub`-repository is called [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web). 
+The neural network can also be used without the web-API (see [`src`](./src)).
 
 ## Requirements
-This repository has the following requirements (see also [`requirements.txt`](requirements.txt)):
+This repository has the following requirements (see also [`requirements.txt`](./requirements.txt)):
 *   `numpy==1.19.4`
 *   `pandas==1.1.4`
 *   `torch==1.9.0`
 *   `scikit_learn==0.24.2`
 *   `joblib==1.0.1`
-*   `dash==2.0.0`*
-*   `plotly==5.5.0`*
-*   `Shapely==1.8.0`*
-
-*\* Only required for the web-API.*
 
 For the installation of `torch`, please look at their [installation guide](https://pytorch.org/get-started/locally/);
 the installation of `torch` is slightly different from other Python-packages for which a `pip install` suffices. Also
@@ -31,63 +25,72 @@ note that `torch` is (currently) only supported for `python 3.7`-`3.9`, and not 
 [official documentation](https://pytorch.org/get-started/locally/#windows-python) of `torch` for the latest updates.
 
 ## Usage
-For the use of the web-API, [`api.py`](api.py) must be executed with Python. This provides a link to a local-host, 
-which allows to use the neural network locally in a web-browser.
+The (basic) usage of the neural network requires importing and initialising the `NeuralNetwork` in a straightforward 
+manner:
+```python
+from src.neural_network import NeuralNetwork
 
-To use the web-API, the following steps are required:
-1.  Install all the requirements (see [*Requirements*](#Requirements)).
-1.  Open a Python IDE (e.g. PyCharm) or the command line.
-1.  Run `api.py` (or `/api.py`).
+nn = NeuralNetwork()
+```
+The most basic usage of the neural network encompasses a single prediction, using the `single_predict()`-method:
+```python
+from src.neural_network import NeuralNetwork
 
-When running from the command line, you can either (1) first change the directory (`cd`) to the repository and 
-subsequently run `api.py`; or (2) run `api.py` from any location by including the full directory to the file. Both 
-options are written-out below, respectively:
-```commandline
-cd path/to/repository
-python api.py
-```
-```commandline
-python path/to/repository/api.py
-```
-This will return the following message, including the link to the locally hosted web-page:
-```
-Dash is running on http://127.0.0.1:8050/
+# initialise neural network
+nn = NeuralNetwork()
 
- * Serving Flask app 'application.app' (lazy loading)
- * Environment: production
-   WARNING: This is a development server. Do not use it in a production deployment.
-   Use a production WSGI server instead.
- * Debug mode: off
- * Running on http://127.0.0.1:8050/ (Press CTRL+C to quit)
+# single prediction
+prediction = nn.single_predict(
+    tidal_range=2.25,
+    surge_level=0,
+    river_discharge=10000,
+    channel_depth=20,
+    channel_width=1000,
+    channel_friction=.023,
+    convergence=1e-4,
+    flat_depth_ratio=0,
+    flat_width=500,
+    flat_friction=.05,
+    bottom_curvature=1e-5,
+    meander_amplitude=1000,
+    meander_length=20000
+)
+
+# print prediction
+print(prediction)
+```
+This will return the salt intrusion length (in metres):
+```
+10934.607982635498
 ```
 
-There is also the possibility to use the neural network without the web-API, i.e. as stand-alone. For more information 
-on this approach, see [`src`](src).
+In addition to the above basic usage of the neural network, some more elaborate use-cases are supported by the
+neural network. These are demonstrated in the [`src`](./src)-folder.
 
 ## Structure
-The neural network and web-API are located in the folders [`src`](src) and 
-[`application`](application), respectively:
+The neural network is stored in the [`src`](./src)-folder:
 ```
-+-- application/
-|   +-- __init__.py
-|   +-- app.py
-|   +-- components.py
-+-- machine_learning/
++-- src/
 |   +-- _data/
 |   |   +-- __init__.py
-|   |   +-- nn_default.pkl
-|   |   +-- nn_scaler.gz
+|   |   +-- annesi.gz
+|   |   +-- annesi.onnz
+|   |   +-- annesi.pkl
 |   +-- __init__.py
 |   +-- _backend.py
 |   +-- neural_network.py
 |   +-- README.md
++-- tests/
+|   +-- __init__.py
+|   +-- test_nn.py
+|   +-- test_utils.py
 +-- utils/
 |   +-- __init__.py
+|   +-- check.py
 |   +-- data_conv.py
 |   +-- files_dirs.py
 +-- .gitignore
 +-- __init__.py
-+-- api.py
 +-- LICENSE
 +-- README.md
 +-- requirements.txt
@@ -107,8 +110,8 @@ When using this repository, please cite accordingly:
 4TU.ResearchData. Software. [doi:10.4121/19307693](https://doi.org/10.4121/19307693).
 
 ### Version-control
-The neural network, and so the web-API, are subject to updates. These updates are reflected by different versions of the
-repository.
+The neural network, and so [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web), are subject to updates. These 
+updates are reflected by different versions of the repository.
 
 ## License
 This repository is licensed under [`Apache License 2.0`](LICENSE).
