@@ -32,9 +32,6 @@ setup(
         'torch',
         'scikit_learn',
         'joblib',
-        'dash',
-        'plotly',
-        'Shapely',
     ],
     python_requires='>=3.7'
 )
