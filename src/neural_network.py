@@ -180,25 +180,8 @@ class NeuralNetwork(_NNData):
         :return: neural network-based estimate of output
         :rtype: pandas.DataFrame
         """
-        # extract input data
-        input_data = [v for k, v in locals().items() if k in self._input_vars]
-
-        # physical input check
-        msg = input_check(*input_data)
-        if len(msg) > 0:
-            LOG.critical(f'Input is considered physically invalid; use output with caution!')
-
-        # normalise data
-        norm_input = InputData.normalise([input_data])
-
-        # use neural network
-        x = torch.tensor(norm_input).float().to(DEVICE)
-        y = self.nn(x)
-        df = pd.DataFrame(data=y.detach().cpu(), columns=self._output_vars, dtype=float)
-
-        # return output estimation
-        out = self._de_normalise(df)
-        return out[self.output]
+        data = pd.DataFrame({k: v for k, v in locals().items() if k in self.input_vars}, index=[0])
+        return self.predict(data, scan='full')
 
     def predict(self, data, scan='full'):
         """Predict output.
