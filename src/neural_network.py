@@ -202,23 +202,43 @@ class NeuralNetwork(_NNData):
         """
         # scanning data set: physical input check
         if scan == 'full':
-            data.apply(lambda row: physical_input_check(False, *row[self.input_vars], grid_limits=False), axis=1)
+            msg = data.apply(lambda row: input_check(*row[self.input_vars]), axis=1)
+            warnings = msg[msg.astype(bool)]
+            if len(warnings):
+                raise ValueError(
+                    f'Input is considered (partly) physical invalid: Use output with caution!'
+                    f'\n\t{len(data) - len(warnings)} invalid samples '
+                    f'({(len(data) - len(warnings)) / len(data) * 100:.1f}%)'
+                    f'\n{warnings}'
+                    f'\n\nSee documentation of `NeuralNetwork.predict()` for scanning options.'
+                )
 
         elif scan == 'skip':
 
             def check(*args):
                 """Perform input check and return a warning when it is not passed."""
-                msg_ = _input_check(*args, grid_limits=False)
-                if msg_:
-                    LOG.warning(msg_)
+                if input_check(*args):
+                    # input-check: failed
                     return None
+                # input-check: passed
                 return args
 
+            size = len(data)
             data = data.apply(lambda row: check(*[row[p] for p in self.input_vars]), axis=1, result_type='broadcast')
             data.dropna(inplace=True)
+            if not len(data) == size:
+                LOG.warning(f'{size - len(data)} samples have been skipped ({(size - len(data)) / size * 100:.1f}%).')
 
         elif scan == 'ignore':
-            pass
+            msg = data.apply(lambda row: input_check(*row[self.input_vars]), axis=1)
+            warnings = msg[msg.astype(bool)]
+            if len(warnings):
+                LOG.critical(
+                    f'Input is considered (partly) physical invalid: Use output with caution!'
+                    f'\n\t{len(data) - len(warnings)} invalid samples '
+                    f'({(len(data) - len(warnings)) / len(data) * 100:.1f}%)'
+                    f'\n{warnings}'
+                )
 
         else:
             msg = f'Scanning option {scan} not included; see documentation for help.'
