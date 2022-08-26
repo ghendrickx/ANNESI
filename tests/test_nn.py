@@ -99,9 +99,25 @@ class TestNeuralNetwork:
         nn_input_data_range['river_discharge'] = 16000
         with pytest.raises(ValueError):
             self.neural_network.predict(nn_input_data_range, scan='full')
+
+    def test_predict_skip(self, nn_input_data_range):
+        nn_input_data_range.loc[0, 'channel_depth'] = 5
+        nn_input_data_range['river_discharge'] = 16000
+        out = self.neural_network.predict(nn_input_data_range, scan='skip')
+        assert len(out) == 9
+
+    def test_predict_ignore(self, nn_input_data_range):
+        nn_input_data_range.loc[0, 'channel_depth'] = 5
+        nn_input_data_range['river_discharge'] = 16000
+        out = self.neural_network.predict(nn_input_data_range, scan='ignore')
+        assert len(out) == 10
+
+    def test_predict_ignore_warn(self, nn_input_data_range, caplog):
+        nn_input_data_range.loc[0, 'channel_depth'] = 5
+        nn_input_data_range['river_discharge'] = 16000
         with caplog.at_level(logging.CRITICAL):
-            self.neural_network.predict(nn_input_data_range)
-        assert 'use output with caution!' in caplog.text.lower()
+            self.neural_network.predict(nn_input_data_range, scan='ignore')
+        assert 'use output with caution' in caplog.text.lower()
 
     def test_estimate(self, nn_input_data):
         nn_input_data['river_discharge'] = [7750, 20000]
