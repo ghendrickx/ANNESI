@@ -71,7 +71,7 @@ class TestNeuralNetwork:
         assert len(out) == 1
         assert all(col in ['L', 'V'] for col in out.columns)
 
-    def test_single_predict_warn(self, nn_input_data, caplog):
+    def test_single_predict_error(self, nn_input_data):
         nn_input_data.update({
             'channel_depth': 5,
             'river_discharge': 16000,
