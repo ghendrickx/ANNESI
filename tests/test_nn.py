@@ -76,9 +76,8 @@ class TestNeuralNetwork:
             'channel_depth': 5,
             'river_discharge': 16000,
         })
-        with caplog.at_level(logging.CRITICAL):
+        with pytest.raises(ValueError):
             self.neural_network.single_predict(**nn_input_data)
-        assert 'use output with caution!' in caplog.text.lower()
 
     def test_single_predict_mod_output(self, nn_input_data):
         self.neural_network.output = 'L'
