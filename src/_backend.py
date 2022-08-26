@@ -3,6 +3,8 @@ Neural network fitted to DFM-simulations: Backend. The neural network's frontend
 
 Author: Gijs G. Hendrickx
 """
+import abc
+
 import numpy as np
 import pandas as pd
 import logging
@@ -16,15 +18,15 @@ from utils.data_conv import Export, Import
 DEVICE = 'cpu'
 LOG = logging.getLogger(__name__)
 
-WD = DirConfig(__file__).config_dir('_data')
-FILE_BASE = 'annesi'
-
-_INPUT_VARS = [
+"""Configuration parameters"""
+_WD = DirConfig(__file__).config_dir('_data')
+_FILE_BASE = 'annesi'
+_INPUT_VARS = (
     'tidal_range', 'surge_level', 'river_discharge', 'channel_depth', 'channel_width', 'channel_friction',
     'convergence', 'flat_depth_ratio', 'flat_width', 'flat_friction', 'bottom_curvature', 'meander_amplitude',
     'meander_length',
-]
-_OUTPUT_VARS = ['L', 'V']
+)
+_OUTPUT_VARS = ('L', 'V')
 
 
 class MLP(torch.nn.Module):
@@ -71,7 +73,92 @@ class MLP(torch.nn.Module):
         return self.features(x)
 
 
-class Training:
+class _NNData(abc.ABC):
+    """Parent-class that provides all basic data for all neural network related objects."""
+    _wd = DirConfig(_WD)
+    _input_vars = list(_INPUT_VARS)
+    _output_vars = list(_OUTPUT_VARS)
+
+    @property
+    def wd(self):
+        """
+        :return: internal working directory
+        :rtype: DirConfig
+        """
+        return self._wd
+
+    @wd.setter
+    def wd(self, wd_):
+        """
+        :param wd_: working directory
+        :type wd_: DirConfig, str, iterable
+        """
+        self._wd = DirConfig(wd_)
+
+    @staticmethod
+    def _set_vars(variables):
+        """Set variables.
+
+        :param variables: input/output variables
+        :type variables: iterable, str
+
+        :return: list of variables
+        :rtype: list
+        """
+        return [variables] if isinstance(variables, str) else list(variables)
+
+    @property
+    def input_vars(self):
+        """
+        :return: input variables
+        :rtype: list
+        """
+        return self._input_vars
+
+    @input_vars.setter
+    def input_vars(self, variables):
+        """
+        :param variables: input variables
+        :type variables: iterable, str
+        """
+        self.set_input_vars(variables)
+
+    @classmethod
+    def set_input_vars(cls, variables):
+        """Set class-level input variables
+
+        :param variables: input variables
+        :type variables: iterable, str
+        """
+        cls._input_vars = cls._set_vars(variables)
+
+    @property
+    def output_vars(self):
+        """
+        :return: output variables
+        :rtype: list
+        """
+        return self._output_vars
+
+    @output_vars.setter
+    def output_vars(self, variables):
+        """
+        :param variables: output variables
+        :type variables: iterable, str
+        """
+        self.set_output_vars(variables)
+
+    @classmethod
+    def set_output_vars(cls, variables):
+        """Set class-level output variables.
+
+        :param variables: output variables
+        :type variables: iterable, str
+        """
+        cls._output_vars = cls._set_vars(variables)
+
+
+class Training(_NNData):
     """Training and testing environment for a neural network, provided with (1) a neural network; (2) an optimiser; and
     (3) a loss-function. When no data is provided for the training, the internal train data set is used; a data set of
     thousands of simulations of idealised estuaries using the modelling system Delft3D Flexible Mesh (DFM).
@@ -91,7 +178,7 @@ class Training:
         self._optimiser = optimiser
         self._loss_function = loss_function
 
-        self._x_train, self._y_train, self._x_test, self._y_test = None, None, None, None
+        self._x_train, self._y_train, self._x_test, self._y_test = (None,) * 4
 
     @property
     def model(self):
@@ -134,12 +221,12 @@ class Training:
         """
         # load data from file
         file_name = 'nn_data.csv' if file_name is None else file_name
-        file = DirConfig(WD if directory is None else directory).config_dir(file_name)
+        file = DirConfig(self.wd if directory is None else directory).config_dir(file_name)
         df = pd.read_csv(file)
 
         # normalise input data
-        x = InputData.normalise(df[_INPUT_VARS if x_cols is None else x_cols])
-        y = df[_OUTPUT_VARS if y_cols is None else y_cols].to_numpy()
+        x = InputData.normalise(df[self.input_vars if x_cols is None else x_cols])
+        y = df[self.output_vars if y_cols is None else y_cols].to_numpy()
 
         # split data in training and testing data
         self._x_train, self._x_test, self._y_train, self._y_test = train_test_split(x, y, test_size=test_size)
@@ -257,16 +344,20 @@ class Training:
         :type to_pkl: bool, optional
         :type to_onnx: bool, optional
         """
-        export = Export(WD if directory is None else directory)
+        export = Export(self.wd if directory is None else directory)
+        meta_data = {
+            'train': len(self._x_train),
+            'test': len(self._x_test)
+        }
 
         if to_pkl:
-            export.to_pkl(self.model, FILE_BASE if file_name is None else file_name)
+            export.to_pkl(self.model, _FILE_BASE if file_name is None else file_name, **meta_data)
 
         if to_onnx:
-            export.to_onnx(self.model, FILE_BASE if file_name is None else file_name, _INPUT_VARS, _OUTPUT_VARS)
+            export.to_onnx(self.model, _FILE_BASE if file_name is None else file_name, **meta_data)
 
 
-class InputData:
+class InputData(_NNData):
     """Input data object to ensure consistent scaling."""
     _scaler = None
     _scaler_is_fitted = False
@@ -280,11 +371,11 @@ class InputData:
         :type file_name: str
         :type directory: DirConfig, str, list[str], tuple[str], optional
         """
-        self._file = DirConfig(WD if directory is None else directory, create_dir=False).config_dir(file_name)
+        self._file = DirConfig(self.wd if directory is None else directory, create_dir=False).config_dir(file_name)
 
         df = pd.read_csv(self._file, **kwargs)
-        self._raw = df[_INPUT_VARS]
-        self._norm = pd.DataFrame(data=self.normalise(df[_INPUT_VARS]), columns=_INPUT_VARS)
+        self._raw = df[self.input_vars]
+        self._norm = pd.DataFrame(data=self.normalise(df[self.input_vars]), columns=self.input_vars)
 
     @property
     def raw_data(self):
@@ -339,7 +430,7 @@ class InputData:
             fit_data = pd.read_csv(file)
 
             cls._scaler = scaler
-            cls._scaler.fit(fit_data[_INPUT_VARS])
+            cls._scaler.fit(fit_data[cls._input_vars])
             cls._scaler_is_fitted = True
 
             if input('Normalise raw data? [y/n] ') == 'y':
@@ -347,7 +438,7 @@ class InputData:
 
             if input('Save scaler? [y/n] ') == 'y':
                 if input('Overwrite internal scaler? [y/n] ') == 'y':
-                    Export(WD).to_gz(cls._scaler, file_name=FILE_BASE)
+                    Export(_WD).to_gz(cls._scaler, file_name=_FILE_BASE)
                 else:
                     directory = input('Provide directory: ')
                     file_name = input('Provide file name: ')
@@ -386,5 +477,200 @@ class InputData:
     @classmethod
     def _load(cls):
         """Load scaler data."""
-        cls._scaler = Import(WD).from_gz(file_name=FILE_BASE)
+        cls._scaler = Import(_WD).from_gz(file_name=_FILE_BASE)
         cls._scaler_is_fitted = True
+
+
+class SimulationData(_NNData):
+    """With this class, a data set is generated for the neural network to be trained on. The data in this data set is
+    based on the model simulations but may contain more output variables and/or other definitions of the output
+    variables than used in the adaptive sampling design. This allows for a broader oriented neural network that uses
+    more of the available data present in the many model simulations.
+    """
+    _data = None
+    _input_data = None
+    _output_data = None
+
+    def __init__(self, model_range, wd=None, folder_base=None, output_dir=None):
+        """
+        :param model_range: range of model indices
+        :param wd: working directory, defaults to None
+        :param folder_base: model folder base, defaults to None
+        :param output_dir: output directory inside model folder, defaults to None
+
+        :type model_range: range, list, tuple
+        :type wd: str, list, tuple, DirConfig, optional
+        :type folder_base: str, optional
+        :type output_dir: str, list, tuple, optional
+        """
+        self.range = model_range
+        self._wd = DirConfig(wd, create_dir=False)
+        self._folder_base = 'run' if folder_base is None else folder_base
+        self._output_dir = ('dflowfm', 'output') if output_dir is None else output_dir
+
+    @property
+    def folder_base(self):
+        """The folder is considered the model-folder, i.e. the folder base name is the model/simulation base name,
+        excluding the numbering.
+
+        :return: folder base name
+        :rtype: str
+        """
+        return self._folder_base
+
+    @property
+    def output_dir(self):
+        """Directory within the model-folder where the output is stored.
+
+        :return: directory of model output
+        :rtype: str, list, tuple
+        """
+        return self._output_dir
+
+    @property
+    def data(self):
+        """Combined input and output data.
+
+        :return: complete data
+        :rtype: pandas.DataFrame
+        """
+        return self._data
+
+    @property
+    def input_data(self):
+        """
+        :return: input data
+        :rtype: pandas.DataFrame
+        """
+        return self._input_data
+
+    @property
+    def output_data(self):
+        """
+        :return: output data
+        :rtype: pandas.DataFrame
+        """
+        return self._output_data
+
+    def directory(self, run_id):
+        """Full output directory of a single model simulation based on its run-ID.
+
+        :param run_id: run-ID
+        :type run_id: int
+
+        :return: output directory
+        :rtype: str
+        """
+        return self.wd.config_dir(f'{self._folder_base}{run_id:04d}', self._output_dir)
+
+    def combine_data(self):
+        """Combine input and output data in one data set, if possible."""
+        if self.input_data is not None and self.output_data is not None:
+            self._data = pd.concat([self.input_data, self.output_data], axis=1)
+
+    def extract_input(self, input_file_name=None):
+        """Extract input data, i.e. model configurations, from input files.
+
+        :param input_file_name: file-name of input data, defaults to None
+        :type input_file_name: str, optional
+        """
+        # default input file-name
+        input_file = 'input.config' if input_file_name is None else input_file_name
+
+        # initiate working data set
+        df = pd.DataFrame(columns=self.input_vars)
+
+        # extract data
+        for run_id in self.range:
+            # load data / temporary DataFrame
+            try:
+                dfi = pd.read_csv(self.wd.config_dir(f'{self._folder_base}{run_id:04d}', input_file), sep='\t')
+            except FileNotFoundError:
+                # raise warning and skip run-id
+                LOG.warning(f'Model data not found\t:\t{self.directory(run_id=run_id)}')
+            else:
+                # append data
+                df = pd.concat([df, dfi[self.input_vars]], ignore_index=True)
+
+        # store data
+        self._input_data = df.copy(deep=True)
+
+        # complete data set, if possible
+        self.combine_data()
+
+    def define_output(self, output, names=None):
+        """Define output data based on simulation data. The output is defined as a list of dictionaries with one single
+        key. This key is equal to the name of the method of CrossSectionData that is to be used. The corresponding value
+        consists again of another dictionary, containing the (key-worded) arguments of this method.
+
+        An example definition of :param output: is as follows:
+        >>> output = [
+        >>>     {'salt_intrusion': {'threshold': 1, 't_start': 1, 'mode': 'mean'}},
+        >>>     {'salt_intrusion': {'threshold': 1, 't_start': 1, 'mode_time': 'mean', 'mode_depth': 'max'}},
+        >>>     {'vertical_tidal_scale': {'t_start': 1}},
+        >>> ]
+
+        Names for the output definitions may be provided (using :param names:); if none are specified, the output names
+        are numbers based on their index in the specified list.
+
+        :param output:
+        :param names:
+        :return:
+        """
+        # default column names
+        col_names = range(len(output)) if names is None else names
+        if not len(col_names) == (len(output)):
+            msg = f'Number of provided names should correspond with number of output definitions: ' \
+                f'{len(col_names)} =/= {len(output)}.'
+            raise ValueError(msg)
+
+        # initiate working data set
+        df = pd.DataFrame(columns=col_names)
+
+        # extract data
+        for run_id in self.range:
+            # load data
+            try:
+                nc = CrossSectionData(directory=self.directory(run_id=run_id))
+            except FileNotFoundError:
+                # raise warning and skip run-id
+                LOG.warning(f'Model data not found\t:\t{self.directory(run_id=run_id)}')
+            else:
+                # temporary DataFrame
+                dfi = pd.DataFrame(data=np.zeros((1, len(col_names))), columns=col_names)
+                # determine output definition(s)
+                for out, col in zip(output, col_names):
+                    method = list(out.keys())[0]
+                    if hasattr(nc, method):
+                        dfi[col] = getattr(nc, method)(**out[method])
+                    else:
+                        LOG.warning(f'CrossSectionData does not have a method called \"{method}\". Method is skipped.')
+                # close netCDF
+                nc.close()
+                # append data
+                df = pd.concat([df, dfi], ignore_index=True)
+
+        # store data
+        self._output_data = df.copy(deep=True)
+
+        # complete data set, if possible
+        self.combine_data()
+
+    def export(self, file_name, directory=None):
+        """Export data.
+
+        :param file_name: file name
+        :param directory: directory, defaults to None
+
+        :type file_name: str
+        :type directory: DirConfig, str, list, tuple, optional
+
+        :return: *.csv-file
+        """
+        # check existence data
+        if self.data is None:
+            msg = f'No data can be exported: No data defined (yet).'
+            raise ValueError(msg)
+
+        # export data
+        Export(self.wd if directory is None else directory).to_csv(self.data, file_name=file_name, index=False)

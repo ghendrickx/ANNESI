@@ -13,19 +13,16 @@ from utils.check import input_check
 from utils.files_dirs import DirConfig
 from utils.data_conv import Import, Export
 
-from src._backend import MLP, InputData, _INPUT_VARS, _OUTPUT_VARS, DEVICE, WD
+from src._backend import MLP, InputData, DEVICE, _NNData
 
 LOG = logging.getLogger(__name__)
 
 
-class NeuralNetwork:
+class NeuralNetwork(_NNData):
     """The interface of a neural network, which defaults to a neural network trained on a large data set of hydrodynamic
     simulations using Delft3D Flexible Mesh (DFM). The DFM-simulations encompass idealised estuaries, and wide-ranging
     sets of parameters are evaluated.
     """
-    _input_vars = _INPUT_VARS
-    _output_vars = _OUTPUT_VARS
-
     _reduced_output_vars = None
     _de_norm = {'L': 8e4, 'V': 30}
 
@@ -71,10 +68,10 @@ class NeuralNetwork:
         """
         if self._nn is None:
             # default neural network
-            nn = MLP(input_dim=len(self._input_vars), output_dim=len(self._output_vars))
+            nn = MLP(input_dim=len(self.input_vars), output_dim=len(self.output_vars))
 
             # import neural network
-            self._nn = Import(WD).from_pkl(nn)
+            self._nn = Import(self.wd).from_pkl(nn)
 
         # return neural network
         return self._nn
@@ -89,7 +86,7 @@ class NeuralNetwork:
         :return: output variables
         :rtype: list
         """
-        return self._output_vars if self._reduced_output_vars is None else self._reduced_output_vars
+        return self.output_vars if self._reduced_output_vars is None else self._reduced_output_vars
 
     @output.setter
     def output(self, out):
@@ -98,9 +95,15 @@ class NeuralNetwork:
 
         >>> NeuralNetwork.get_output_vars()
 
+        When the output variables are set to None, this is considered as resetting the output definition, which returns
+        all available output variables.
+
         :param out: selection of output parameters
-        :type out: iterable[str]
+        :type out: iterable[str], None
         """
+        # reset to default, i.e. all output variables
+        if out is None:
+            self._reduced_output_vars = None
 
         def validation(key):
             """Validate output definition.
@@ -111,12 +114,12 @@ class NeuralNetwork:
             :return: valid output definition
             :rtype: bool
             """
-            if key in _OUTPUT_VARS:
+            if key in self.output_vars:
                 # valid output definition
                 return True
 
             # invalid output definition
-            LOG.critical(f'Unavailable output variable: \"{key}\": Skipped.\n\tChoose one of {_OUTPUT_VARS}')
+            LOG.critical(f'Unavailable output variable: \"{key}\": Skipped.\n\tChoose one of {self.output_vars}')
             return False
 
         # single output definition
@@ -177,63 +180,100 @@ class NeuralNetwork:
         :return: neural network-based estimate of output
         :rtype: pandas.DataFrame
         """
-        # extract input data
-        input_data = [v for k, v in locals().items() if k in self._input_vars]
+        data = pd.DataFrame({k: v for k, v in locals().items() if k in self.input_vars}, index=[0])
+        return self.predict(data, scan='full')
 
-        # physical input check
-        msg = input_check(*input_data)
-        if len(msg) > 0:
-            LOG.critical(f'Input is considered physically invalid; use output with caution!')
-
-        # normalise data
-        norm_input = InputData.normalise([input_data])
-
-        # use neural network
-        x = torch.tensor(norm_input).float().to(DEVICE)
-        y = self.nn(x)
-        df = pd.DataFrame(data=y.detach().cpu(), columns=self._output_vars, dtype=float)
-
-        # return output estimation
-        out = self._de_normalise(df)
-        return out[self.output]
-
-    def predict(self, data):
+    def predict(self, data, scan='full'):
         """Predict output.
 
+        The scanning method is based on the `scan`-argument, which can have one of three values:
+         1. 'full'      :   apply the input check and raise an error if there is an invalid model configuration.
+         2. 'skip'      :   apply the input check and remove invalid model configurations from the data.
+         3. 'ignore'    :   ignore the input check and predict for all model configurations, invalid or valid.
+
         :param data: input data
+        :param scan: method of scanning the input data, defaults to 'full'
+
         :type data: pandas.DataFrame
+        :type scan: str
 
         :return: prediction
         :rtype: pandas.DataFrame
         """
-        # physical input check
-        msg = data.apply(lambda row: input_check(*row[_INPUT_VARS]), axis=1)
-        if len(msg[msg.astype(bool)]) > 0:
-            LOG.critical(f'Input is considered physically invalid; use output with caution!')
+        # scanning data set: physical input check
+        if scan == 'full':
+            msg = data.apply(lambda row: input_check(*row[self.input_vars]), axis=1)
+            warnings = msg[msg.astype(bool)]
+            if len(warnings):
+                raise ValueError(
+                    f'Input is considered (partly) physical invalid: Use output with caution!'
+                    f'\n\t{len(data) - len(warnings)} invalid samples '
+                    f'({(len(data) - len(warnings)) / len(data) * 100:.1f}%)'
+                    f'\n{warnings}'
+                    f'\n\nSee documentation of `NeuralNetwork.predict()` for scanning options.'
+                )
+
+        elif scan == 'skip':
+
+            def check(*args):
+                """Perform input check and return a warning when it is not passed."""
+                if input_check(*args):
+                    # input-check: failed
+                    return None
+                # input-check: passed
+                return args
+
+            size = len(data)
+            data = data.apply(lambda row: check(*[row[p] for p in self.input_vars]), axis=1, result_type='broadcast')
+            data.dropna(inplace=True)
+            if not len(data) == size:
+                LOG.warning(f'{size - len(data)} samples have been skipped ({(size - len(data)) / size * 100:.1f}%).')
+
+        elif scan == 'ignore':
+            msg = data.apply(lambda row: input_check(*row[self.input_vars]), axis=1)
+            warnings = msg[msg.astype(bool)]
+            if len(warnings):
+                LOG.critical(
+                    f'Input is considered (partly) physical invalid: Use output with caution!'
+                    f'\n\t{len(data) - len(warnings)} invalid samples '
+                    f'({(len(data) - len(warnings)) / len(data) * 100:.1f}%)'
+                    f'\n{warnings}'
+                )
+
+        else:
+            msg = f'Scanning option {scan} not included; see documentation for help.'
+            raise NotImplementedError(msg)
 
         # normalise data
-        norm_data = InputData.normalise(data)
+        norm_data = InputData.normalise(data[self.input_vars])
 
         # use neural network
         x = torch.tensor(norm_data).float().to(DEVICE)
         y = self.nn(x)
 
         # store as pandas.DataFrame
-        df = pd.DataFrame(data=y.detach().cpu(), columns=self._output_vars, dtype=float)
+        df = pd.DataFrame(data=y.detach().cpu(), columns=self.output_vars, dtype=float)
 
         # return selected output
         out = self._de_normalise(df)
         return out[self.output]
 
-    def predict_from_file(self, file_name, directory=None, **kwargs):
+    def predict_from_file(self, file_name, directory=None, scan='full', **kwargs):
         """Predict output based on input data from a file.
+
+        The scanning method is based on the `scan`-argument, which can have one of three values:
+         1. 'full'      :   apply the input check and raise an error if there is an invalid model configuration.
+         2. 'skip'      :   apply the input check and remove invalid model configurations from the data.
+         3. 'ignore'    :   ignore the input check and predict for all model configurations, invalid or valid.
 
         :param file_name: file name
         :param directory: directory, defaults to None
+        :param scan: method of scanning the input data, defaults to 'full'
         :param kwargs: pandas.read_csv key-worded arguments
 
         :type file_name: str
         :type directory: DirConfig, str, list[str], tuple[str], optional
+        :type scan: str, optional
 
         :return: prediction
         :rtype: pandas.DataFrame
@@ -243,7 +283,7 @@ class NeuralNetwork:
         data = pd.read_csv(file, **kwargs)
 
         # predict output
-        self.predict(data)
+        self.predict(data, scan)
 
     def estimate(
             self, tidal_range=None, surge_level=None, river_discharge=None, channel_depth=None, channel_width=None,
@@ -314,22 +354,22 @@ class NeuralNetwork:
             # model configuration check: physical soundness
             msg = input_check(*args)
 
+            # model configuration check: failed
             if msg:
-                # model configuration check: failed
                 LOG.info(f'Physical input check failed: {args}')
                 return None
 
             # model configuration check: passed
             return args
 
-        # return `single_predict` when all input parameters are provided
-        if all(isinstance(v, (float, int)) for k, v in locals().items() if k in self._input_vars):
-            return self.single_predict(**{k: v for k, v in locals().items() if k in self._input_vars})
+        # determine estimate when all input parameters are provided
+        if all(isinstance(v, (float, int)) for k, v in locals().items() if k in self.input_vars):
+            return self.single_predict(**{k: v for k, v in locals().items() if k in self.input_vars})
 
         # define input space
         scaler = InputData.get_scaler()
         arrays = dict()
-        for i, var in enumerate(self._input_vars):
+        for i, var in enumerate(self.input_vars):
             # no range defined
             if locals()[var] is None:
                 arrays[var] = np.linspace(scaler.data_min_[i], scaler.data_max_[i], parameter_samples)
@@ -345,16 +385,14 @@ class NeuralNetwork:
                 if min(locals()[var]) < scaler.data_min_[i] or max(locals()[var]) > scaler.data_max_[i]:
                     LOG.warning(f'Defined range exceeds training data; \"{var}\" range used: {min_var, max_var}')
 
-        # create and check model configurations
+        # create model configurations
         df = pd.DataFrame(
             data=np.array(np.meshgrid(*[v for v in arrays.values()])).T.reshape(-1, len(arrays)),
-            columns=list(self._input_vars)
+            columns=self.input_vars
         )
-        df = df.apply(lambda row: check(*[row[p] for p in self._input_vars]), axis=1, result_type='broadcast')
-        df.dropna(inplace=True)
 
-        # predict output
-        df[self.output] = self.predict(df)
+        # check data and predict output
+        df[self.output] = self.predict(df, scan='skip')
 
         # return statistics of estimation
         if include_input:
@@ -381,8 +419,8 @@ class NeuralNetwork:
 
     def save_as(self, f_type, file_name=None, directory=None):
         """Save neural network as one of the available export-formats:
-         1. *.onnx  :   for integration of neural network in a website.
-         2. *.pkl   :   for usage within Python, using PyTorch.
+         1. *.pkl   :   for usage within Python, using PyTorch.
+         2. *.onnx  :   for integration of neural network in a website.
 
         :param f_type: file-type
         :param file_name: file-name, defaults to None
@@ -393,7 +431,7 @@ class NeuralNetwork:
         :type directory: DirConfig, str, iterable[str], optional
         """
         # check available export-formats
-        f_types = ('onnx', 'pkl')
+        f_types = ('pkl', 'onnx')
         if f_type not in f_types:
             msg = f'NeuralNetwork can only be saved as {f_types}, {f_type} has been specified.'
             raise NotImplementedError(msg)
@@ -402,14 +440,14 @@ class NeuralNetwork:
         if directory == 'internal-save':
             msg = 'About to save neural network internally. This might overwrite an existing version. Continue? [y/n]'
             if input(msg) == 'y':
-                directory = WD
+                directory = self.wd
             else:
                 msg = 'Internally saving neural network aborted.'
                 raise KeyboardInterrupt(msg)
 
         # export neural network
         export = Export(directory)
-        if f_type == 'onnx':
-            export.to_onnx(self.nn, file_name=file_name)
-        elif f_type == 'pkl':
+        if f_type == 'pkl':
             export.to_pkl(self.nn, file_name=file_name)
+        elif f_type == 'onnx':
+            export.to_onnx(self.nn, file_name=file_name)
