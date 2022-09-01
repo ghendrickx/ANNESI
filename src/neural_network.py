@@ -283,7 +283,7 @@ class NeuralNetwork(_NNData):
         data = pd.read_csv(file, **kwargs)
 
         # predict output
-        self.predict(data, scan)
+        return self.predict(data, scan)
 
     def estimate(
             self, tidal_range=None, surge_level=None, river_discharge=None, channel_depth=None, channel_width=None,
