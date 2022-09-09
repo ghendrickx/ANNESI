@@ -7,13 +7,14 @@ import logging
 
 import joblib
 import torch
+import time
 
 from utils.files_dirs import DirConfig
 
 LOG = logging.getLogger(__name__)
 
 
-def _default_file_name(file_name, default, extension=None):
+def default_file_name(file_name, default, extension=None):
     """Use default file name if none is defined. The extension is based on the default file name provided if not
     stated explicitly.
 
@@ -89,7 +90,7 @@ class Export(_DataConversion):
         :return: *.csv-file
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='output.csv')
+        file_name = default_file_name(file_name, default='output.csv')
 
         # export data set
         data.to_csv(self._wd.config_dir(file_name), **kwargs)
@@ -109,7 +110,7 @@ class Export(_DataConversion):
         :return: *.gz-file
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='scaler.gz')
+        file_name = default_file_name(file_name, default='scaler.gz')
 
         # export scaler
         joblib.dump(scaler, self._wd.config_dir(file_name))
@@ -117,43 +118,42 @@ class Export(_DataConversion):
         # log export
         self._log(file_name)
 
-    def to_pkl(self, neural_network, file_name=None):
-        """Save nueral network as *.pkl for use within a Python environment.
+    def to_pkl(self, neural_network, file_name=None, **kwargs):
+        """Save neural network as `*.pkl`-file.
 
         :param neural_network: neural network
         :param file_name: file name, defaults to None
+        :param kwargs: meta data of neural network (see documentation of `Export._export_meta_data()`)
 
         :type neural_network: torch.nn.Module
         :type file_name: str, optional
 
         :return: *.pkl-file
         """
-        # default file-name
-        file_name = _default_file_name(file_name, default='annesi.pkl')
+        import torch
 
-        # export neural network
-        torch.save(neural_network.state_dict(), self._wd.config_dir(file_name))
+        file_name = default_file_name(file_name, default='annesi.pkl')
 
-        # log export
+        torch.save(neural_network.state_dict(), self.working_dir.config_dir(file_name))
+        self._export_meta_data('annesi-pkl.txt', model=neural_network, **kwargs)
+
         self._log(file_name)
 
-    def to_onnx(self, neural_network, file_name=None, input_names=None, output_names=None):
-        """Save neural network as *.onnx for use on a (static) web-page.
+    def to_onnx(self, neural_network, file_name=None, **kwargs):
+        """Save neural network as `*.onnx`-file for use on a (static) web-page.
 
         :param neural_network: neural network
         :param file_name: file-name, defaults to None
-        :param input_names: names of input parameters, defaults to None
-        :param output_names: names of output parameters, defaults to None
+        :param kwargs: meta data of neural network (see documentation of `Export._export_meta_data()`)
 
         :type neural_network: torch.nn.Module
         :type file_name: str, optional
-        :type input_names: iterable[str]
-        :type output_names: iterable[str]
 
         :return: *.onnx-file
         """
-        # default file-name
-        file_name = _default_file_name(file_name, default='annesi.onnx')
+        import torch
+
+        file_name = default_file_name(file_name, default='annesi.onnx')
 
         # ensure neural network is in inference-mode
         neural_network.eval()
@@ -161,12 +161,47 @@ class Export(_DataConversion):
         dummy_input = torch.randn(1, neural_network.features[0].in_features)
 
         # export neural network to ONNX
-        torch.onnx.export(
-            neural_network, dummy_input, self.working_dir.config_dir(file_name),
-            input_names=input_names, output_names=output_names
-        )
+        torch.onnx.export(neural_network, dummy_input, self.working_dir.config_dir(file_name))
+        self._export_meta_data('annesi-onnx.txt', model=neural_network, **kwargs)
 
-        # log export
+        self._log(file_name)
+
+    def _export_meta_data(self, file_name, **kwargs):
+        """Export a `*.log`-file with information about the exported model, and when it is (last) saved. Depending on
+        the information provided in the `kwargs`, the content of the file is created. The `*.log`-file includes (or can
+        include) the following information:
+         -  (default)       :   date and time of exporting
+         -  model           :   model type, features, and (internal) design (torch.nn.Module, optional)
+         -  train           :   size of training data set (int, optional)
+         -  test            :   size of testing data set (int, optional)
+         -  train & test    :   size of overall data set (int, optional)
+        The last is included if both the `train` and `test` key-word are provided.
+
+        :param file_name: file-name
+        :param kwargs: meta data
+
+        :type file_name: str
+        """
+        with open(self.working_dir.config_dir(file_name), mode='w') as f:
+            f.write(f'Model exported on {time.ctime(time.time())}\n')
+
+            if kwargs.get('model'):
+                model = kwargs.get('model')
+                f.write(f'Model type: {model}\n')
+                f.write(f'\tinput features: {model.features[0].in_features}\n')
+                f.write(f'\toutput features: {model.features[-1].out_features}\n')
+
+                f.write(f'Model design: {model.features}\n')
+
+            if kwargs.get('train'):
+                f.write(f'Size of training data set: {kwargs.get("train")}\n')
+
+            if kwargs.get('test'):
+                f.write(f'Size of testing data set: {kwargs.get("test")}\n')
+
+            if kwargs.get('train') and kwargs.get('test'):
+                f.write(f'Size of overall data set: {kwargs.get("train") + kwargs.get("test")}\n')
+
         self._log(file_name)
 
 
@@ -184,7 +219,7 @@ class Import(_DataConversion):
         :rtype: BaseEstimator
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='scaler.gz')
+        file_name = default_file_name(file_name, default='scaler.gz')
 
         # import scaler
         scaler = joblib.load(self._wd.config_dir(file_name))
@@ -208,7 +243,7 @@ class Import(_DataConversion):
         :rtype: torch.nn.Module
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='annesi.pkl')
+        file_name = default_file_name(file_name, default='annesi.pkl')
 
         # import neural network
         model.load_state_dict(torch.load(self._wd.config_dir(file_name)))

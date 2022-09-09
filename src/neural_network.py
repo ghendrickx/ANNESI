@@ -24,7 +24,7 @@ class NeuralNetwork(_NNData):
     sets of parameters are evaluated.
     """
     _reduced_output_vars = None
-    _de_norm = {'L': 8e4, 'V': 30}
+    _de_norm = {'L': 2e5, 'V': 30}
 
     def __init__(self, neural_network=None):
         """Loads trained neural network, which is stored inside the package, by default. When a neural network is
@@ -178,9 +178,11 @@ class NeuralNetwork(_NNData):
         :type meander_length: float
 
         :return: neural network-based estimate of output
-        :rtype: pandas.DataFrame
+        :rtype: pandas.DataFrame, float
         """
         data = pd.DataFrame({k: v for k, v in locals().items() if k in self.input_vars}, index=[0])
+        if len(self.output) == 1:
+            return float(self.predict(data, scan='full').values)
         return self.predict(data, scan='full')
 
     def predict(self, data, scan='full'):
@@ -283,7 +285,7 @@ class NeuralNetwork(_NNData):
         data = pd.read_csv(file, **kwargs)
 
         # predict output
-        self.predict(data, scan)
+        return self.predict(data, scan)
 
     def estimate(
             self, tidal_range=None, surge_level=None, river_discharge=None, channel_depth=None, channel_width=None,

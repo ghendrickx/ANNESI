@@ -1,0 +1,16 @@
+Model exported on Fri Sep  9 10:39:08 2022
+Model type: MLP: Multilayer Perceptron
+	input features: 13
+	output features: 2
+Model design: Sequential(
+  (0): Linear(in_features=13, out_features=50, bias=True)
+  (1): ReLU(inplace=True)
+  (2): Linear(in_features=50, out_features=50, bias=True)
+  (3): ReLU(inplace=True)
+  (4): Linear(in_features=50, out_features=50, bias=True)
+  (5): ReLU(inplace=True)
+  (6): Linear(in_features=50, out_features=2, bias=True)
+)
+Size of training data set: 1001
+Size of testing data set: 251
+Size of overall data set: 1252

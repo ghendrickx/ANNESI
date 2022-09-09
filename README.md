@@ -38,6 +38,7 @@ from src.neural_network import NeuralNetwork
 
 # initialise neural network
 nn = NeuralNetwork()
+nn.output = 'L'
 
 # single prediction
 prediction = nn.single_predict(
@@ -61,7 +62,7 @@ print(prediction)
 ```
 This will return the salt intrusion length (in metres):
 ```
-10934.607982635498
+13576.671481132507
 ```
 
 In addition to the above basic usage of the neural network, some more elaborate use-cases are supported by the
@@ -74,8 +75,10 @@ The neural network is stored in the [`src`](./src)-folder:
 |   +-- _data/
 |   |   +-- __init__.py
 |   |   +-- annesi.gz
-|   |   +-- annesi.onnz
+|   |   +-- annesi.onnx
 |   |   +-- annesi.pkl
+|   |   +-- annesi-onnx.txt
+|   |   +-- annesi-pkl.txt
 |   +-- __init__.py
 |   +-- _backend.py
 |   +-- neural_network.py
@@ -102,7 +105,7 @@ Gijs G. Hendrickx
 [![alt text](https://camo.githubusercontent.com/e1ec0e2167b22db46b0a5d60525c3e4a4f879590a04c370fef77e6a7e00eb234/68747470733a2f2f696e666f2e6f726369642e6f72672f77702d636f6e74656e742f75706c6f6164732f323031392f31312f6f726369645f31367831362e706e67) 0000-0001-9523-7657](https://orcid.org/0000-0001-9523-7657)
 (Delft University of Technology).
 
-Contact: [G.G.Hendrickx@tudelft.nl](mailto:G.G.Hendrickx@tudelft.nl?subject=[GitHub]%20ANNESI).
+Contact: [G.G.Hendrickx@tudelft.nl](mailto:G.G.Hendrickx@tudelft.nl?subject=[GitHub]%20ANNESI: ).
 
 ## References
 When using this repository, please cite accordingly:
@@ -112,6 +115,20 @@ When using this repository, please cite accordingly:
 ### Version-control
 The neural network, and so [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web), are subject to updates. These 
 updates are reflected by different versions of the repository.
+
+### Related references
+The neural network (and its [web-API](https://github.com/ghendrickx/ANNESI-web)) has been part of presentations at the 
+following conferences (*presenter in bold-face*):
+*   [**Hendrickx, G.G.**](https://orcid.org/0000-0001-9523-7657), 
+    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817), 
+    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257), 
+    [Huismans, Y.](https://orcid.org/0000-0001-6537-6111), 
+    [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913), and 
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
+    (March 4, 2022).
+    Combining machine learning and process-based models to enhance the understanding of estuarine salt intrusion and
+    development of estuary-scale nature-based solutions. 
+    *Ocean Sciences Meeting 2022*. Online.
 
 ## License
 This repository is licensed under [`Apache License 2.0`](LICENSE).
