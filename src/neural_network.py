@@ -24,7 +24,7 @@ class NeuralNetwork(_NNData):
     sets of parameters are evaluated.
     """
     _reduced_output_vars = None
-    _de_norm = {'L': 8e4, 'V': 30}
+    _de_norm = {'L': 2e5, 'V': 30}
 
     def __init__(self, neural_network=None):
         """Loads trained neural network, which is stored inside the package, by default. When a neural network is
