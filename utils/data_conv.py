@@ -14,7 +14,7 @@ from utils.files_dirs import DirConfig
 LOG = logging.getLogger(__name__)
 
 
-def _default_file_name(file_name, default, extension=None):
+def default_file_name(file_name, default, extension=None):
     """Use default file name if none is defined. The extension is based on the default file name provided if not
     stated explicitly.
 
@@ -90,7 +90,7 @@ class Export(_DataConversion):
         :return: *.csv-file
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='output.csv')
+        file_name = default_file_name(file_name, default='output.csv')
 
         # export data set
         data.to_csv(self._wd.config_dir(file_name), **kwargs)
@@ -110,7 +110,7 @@ class Export(_DataConversion):
         :return: *.gz-file
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='scaler.gz')
+        file_name = default_file_name(file_name, default='scaler.gz')
 
         # export scaler
         joblib.dump(scaler, self._wd.config_dir(file_name))
@@ -219,7 +219,7 @@ class Import(_DataConversion):
         :rtype: BaseEstimator
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='scaler.gz')
+        file_name = default_file_name(file_name, default='scaler.gz')
 
         # import scaler
         scaler = joblib.load(self._wd.config_dir(file_name))
@@ -243,7 +243,7 @@ class Import(_DataConversion):
         :rtype: torch.nn.Module
         """
         # default file-name
-        file_name = _default_file_name(file_name, default='annesi.pkl')
+        file_name = default_file_name(file_name, default='annesi.pkl')
 
         # import neural network
         model.load_state_dict(torch.load(self._wd.config_dir(file_name)))
