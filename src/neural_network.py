@@ -178,9 +178,11 @@ class NeuralNetwork(_NNData):
         :type meander_length: float
 
         :return: neural network-based estimate of output
-        :rtype: pandas.DataFrame
+        :rtype: pandas.DataFrame, float
         """
         data = pd.DataFrame({k: v for k, v in locals().items() if k in self.input_vars}, index=[0])
+        if len(self.output) == 1:
+            return float(self.predict(data, scan='full').values)
         return self.predict(data, scan='full')
 
     def predict(self, data, scan='full'):
