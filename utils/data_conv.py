@@ -135,7 +135,7 @@ class Export(_DataConversion):
         file_name = default_file_name(file_name, default='annesi.pkl')
 
         torch.save(neural_network.state_dict(), self.working_dir.config_dir(file_name))
-        self._export_meta_data('annesi-pkl.log', model=neural_network, **kwargs)
+        self._export_meta_data('annesi-pkl.txt', model=neural_network, **kwargs)
 
         self._log(file_name)
 
@@ -162,7 +162,7 @@ class Export(_DataConversion):
 
         # export neural network to ONNX
         torch.onnx.export(neural_network, dummy_input, self.working_dir.config_dir(file_name))
-        self._export_meta_data('annesi-onnx.log', model=neural_network, **kwargs)
+        self._export_meta_data('annesi-onnx.txt', model=neural_network, **kwargs)
 
         self._log(file_name)
 
