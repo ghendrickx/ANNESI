@@ -124,8 +124,8 @@ following conferences (*presenter in bold-face*):
     [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257), 
     [Huismans, Y.](https://orcid.org/0000-0001-6537-6111), 
     [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913), and 
-    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341). 
-    March 4, 2022.
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
+    (March 4, 2022).
     Combining machine learning and process-based models to enhance the understanding of estuarine salt intrusion and
     development of estuary-scale nature-based solutions. 
     *Ocean Sciences Meeting 2022*. Online.
