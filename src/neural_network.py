@@ -26,7 +26,7 @@ class NeuralNetwork(_NNData):
     _reduced_output_vars = None
     _de_norm = {'L': 2e5, 'V': 30}
 
-    def __init__(self, neural_network=None):
+    def __init__(self, neural_network=None, device=DEVICE):
         """Loads trained neural network, which is stored inside the package, by default. When a neural network is
         provided, this default network is overruled, and the provided neural network is used. It is assumed that this
         neural network has been trained upfront; if so, please make sure that the neural network is trained using the
@@ -47,9 +47,13 @@ class NeuralNetwork(_NNData):
         get inspired by the definition of the default neural network: 'neural_network._backend.MLP'.
 
         :param neural_network: (trained) neural network, defaults to None
+        :param device: running device for neural network, defaults to DEVICE
+
         :type neural_network: torch.nn.Module, optional
+        :type device: str, optional
         """
         self._nn = neural_network
+        self._device = device
 
     def __repr__(self):
         """Object representation."""
@@ -250,7 +254,7 @@ class NeuralNetwork(_NNData):
         norm_data = InputData.normalise(data[self.input_vars])
 
         # use neural network
-        x = torch.tensor(norm_data).float().to(DEVICE)
+        x = torch.tensor(norm_data).float().to(self._device)
         y = self.nn(x)
 
         # store as pandas.DataFrame
