@@ -184,7 +184,10 @@ class NeuralNetwork(_NNData):
         :return: neural network-based estimate of output
         :rtype: pandas.DataFrame, float
         """
+        # convert arguments to pandas.DataFrame
         data = pd.DataFrame({k: v for k, v in locals().items() if k in self.input_vars}, index=[0])
+
+        # return output
         if len(self.output) == 1:
             return float(self.predict(data, scan='full').values)
         return self.predict(data, scan='full')
@@ -219,14 +222,15 @@ class NeuralNetwork(_NNData):
                     f'\n\nSee documentation of `NeuralNetwork.predict()` for scanning options.'
                 )
 
+        # scanning data set: skip configuration(s) if invalid
         elif scan == 'skip':
 
             def check(*args):
                 """Perform input check and return a warning when it is not passed."""
                 if input_check(*args):
-                    # input-check: failed
+                    # input check: failed
                     return None
-                # input-check: passed
+                # input check: passed
                 return args
 
             size = len(data)
@@ -235,6 +239,7 @@ class NeuralNetwork(_NNData):
             if not len(data) == size:
                 LOG.warning(f'{size - len(data)} samples have been skipped ({(size - len(data)) / size * 100:.1f}%).')
 
+        # scanning data set: ignore input check
         elif scan == 'ignore':
             msg = data.apply(lambda row: input_check(*row[self.input_vars]), axis=1)
             warnings = msg[msg.astype(bool)]
@@ -246,6 +251,7 @@ class NeuralNetwork(_NNData):
                     f'\n{warnings}'
                 )
 
+        # scanning data set: invalid scanning option
         else:
             msg = f'Scanning option {scan} not included; see documentation for help.'
             raise NotImplementedError(msg)
