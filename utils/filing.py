@@ -95,23 +95,6 @@ class Export(_DataConversion):
     """Exporting data/files."""
     _wd = None
 
-    @_file_name(default='output.csv')
-    def to_csv(self, data, *, file_name=None, **kwargs):
-        """Export data to *.csv-file
-
-        :param data: output data
-        :param file_name: file name, defaults to None
-        :param kwargs: key-worded arguments for exporting pandas.DataFrame to *.csv
-
-        :type data: pandas.DataFrame
-        :type file_name: str, optional
-        :type kwargs: dict, optional
-
-        :return: *.csv-file
-        """
-        # export data set
-        data.to_csv(self._wd.config_dir(file_name), **kwargs)
-
     @_file_name(default='scaler.gz')
     def to_gz(self, scaler, *, file_name=None):
         """Dump fitted scaler for later re-use to a *.gz-file.
@@ -213,7 +196,7 @@ class Import(_DataConversion):
     """Importing data/files."""
     _wd = None
 
-    @_file_name(default='scaler.gz')
+    @_file_name(default='annesi.gz')
     def from_gz(self, *, file_name=None):
         """Load fitted scaler from previous fitting to re-use from a *.gz-file.
 
