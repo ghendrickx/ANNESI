@@ -13,11 +13,11 @@ The neural network can also be used without the web-API (see [`src`](./src)).
 
 ## Requirements
 This repository has the following requirements (see also [`requirements.txt`](./requirements.txt)):
-*   `numpy==1.19.4`
-*   `pandas==1.1.4`
-*   `torch==1.9.0`
-*   `scikit_learn==0.24.2`
-*   `joblib==1.0.1`
+*   `numpy>=1.19.4`
+*   `pandas>=1.1.4`
+*   `torch>=1.9.0`
+*   `scikit_learn>=0.24.2`
+*   `joblib>=1.0.1`
 
 For the installation of `torch`, please look at their [installation guide](https://pytorch.org/get-started/locally/);
 the installation of `torch` is slightly different from other Python-packages for which a `pip install` suffices. Also
