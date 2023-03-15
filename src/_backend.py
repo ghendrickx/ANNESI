@@ -324,7 +324,7 @@ class _NeuralNetwork(abc.ABC):
         """
         return self.norm.scaler
 
-    def predict(self, data, scan='full', **kwargs):
+    def predict(self, data, scan='full'):
         """Predict output.
 
         The scanning method is based on the `scan`-argument, which can have one of three values:
@@ -334,19 +334,15 @@ class _NeuralNetwork(abc.ABC):
 
         :param data: input data
         :param scan: method of scanning the input data, defaults to 'full'
-        :param kwargs: optional arguments
-            grid_limits: include gid-limits checks, defaults to False
 
         :type data: pandas.DataFrame
         :type scan: str, optional
-        :type kwargs: optional
-            grid_limits: bool
 
         :return: model prediction
         :rtype: pandas.DataFrame
         """
         # scan input data
-        data = self.scan_input(data[self.input_vars], scan=scan, **kwargs)
+        data = self.scan_input(data[self.input_vars], scan=scan)
 
         # normalise input data
         norm_data = self.norm(data)
