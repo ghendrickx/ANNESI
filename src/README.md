@@ -39,7 +39,7 @@ print(prediction)
 ```
 This will return the salt intrusion length (in metres):
 ```
-10934.607982635498  #TODO: Update this value based on the newly trained neural network.
+13576.671481132507
 ```
 
 ## Data set prediction
