@@ -5,6 +5,7 @@ Author: Gijs G. Hendrickx
 """
 import logging
 
+import pandas as pd
 import joblib
 import torch
 import time
@@ -94,6 +95,30 @@ class _DataConversion:
 class Export(_DataConversion):
     """Exporting data/files."""
     _wd = None
+
+    @_file_name(default='output.csv')
+    def to_csv(self, data, *, file_name=None, **kwargs):
+        """Export data to *.csv-file
+
+        :param data: output data
+        :param file_name: file-name, defaults to None
+        :param kwargs: key-worded arguments for exporting pandas.DataFrame to *.csv
+
+        :type data: pandas.DataFrame, dict, iterable
+        :type file_name: str, optional
+        :type kwargs: dict, optional
+
+        :return: *.csv-file
+        """
+        # optional arguments
+        index = kwargs.pop('index', False)
+
+        # convert to pandas.DataFrame
+        if not hasattr(data, 'to_csv'):
+            data = pd.DataFrame(data=data)
+
+        # export to *.csv
+        data.to_csv(self._wd.config_dir(file_name), index=index, **kwargs)
 
     @_file_name(default='scaler.gz')
     def to_gz(self, scaler, *, file_name=None):
@@ -195,6 +220,21 @@ class Export(_DataConversion):
 class Import(_DataConversion):
     """Importing data/files."""
     _wd = None
+
+    @_file_name(default='data.csv')
+    def from_csv(self, *, file_name=None, **kwargs):
+        """Load data from a *.csv-file.
+
+        :param file_name: file name, defaults to None
+        :param kwargs: optional arguments for `pandas.read_csv()`
+
+        :type file_name: str, optional
+
+        :return: data
+        :rtype: pandas.DataFrame
+        """
+        # read data
+        return pd.read_csv(self._wd.config_dir(file_name), **kwargs)
 
     @_file_name(default='annesi.gz')
     def from_gz(self, *, file_name=None):
