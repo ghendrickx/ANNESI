@@ -1,5 +1,5 @@
 """
-Neural network fitted to DFM-simulations: Frontend. The neural network's backend is in '._backend.py'.
+Neural network fitted to DFM-simulations: Frontend. The neural network's backend is in 'src._backend.py'.
 
 Author: Gijs G. Hendrickx
 """
