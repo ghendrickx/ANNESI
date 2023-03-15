@@ -26,23 +26,22 @@ note that `torch` is (currently) only supported for `python 3.7`-`3.9`, and not 
 [official documentation](https://pytorch.org/get-started/locally/#windows-python) of `torch` for the latest updates.
 
 ## Usage
-The (basic) usage of the neural network requires importing and initialising the `NeuralNetwork` in a straightforward 
-manner:
+The (basic) usage of the neural network requires importing and initialising the `ANNESI` in a straightforward manner:
 ```python
-from src.neural_network import NeuralNetwork
+from src.neural_network import ANNESI
 
-nn = NeuralNetwork()
+model = ANNESI()
 ```
 The most basic usage of the neural network encompasses a single prediction, using the `single_predict()`-method:
 ```python
-from src.neural_network import NeuralNetwork
+from src.neural_network import ANNESI
 
 # initialise neural network
-nn = NeuralNetwork()
-nn.output = 'L'
+model = ANNESI()
+model.output = 'L'
 
 # single prediction
-prediction = nn.single_predict(
+prediction = model.single_predict(
     tidal_range=2.25,
     surge_level=0,
     river_discharge=10000,
@@ -75,7 +74,6 @@ The neural network is stored in the [`src`](./src)-folder:
 +-- src/
 |   +-- _data/
 |   |   +-- __init__.py
-|   |   +-- annesi.gz
 |   |   +-- annesi.onnx
 |   |   +-- annesi.pkl
 |   |   +-- annesi-onnx.txt
@@ -89,10 +87,14 @@ The neural network is stored in the [`src`](./src)-folder:
 |   +-- test_nn.py
 |   +-- test_utils.py
 +-- utils/
+|   +-- _data/
+|   |   +-- __init__.py
+|   |   +-- annesi.gz
 |   +-- __init__.py
 |   +-- check.py
-|   +-- data_conv.py
-|   +-- files_dirs.py
+|   +-- filing.py
+|   +-- normalise.py
+|   +-- path.py
 +-- .gitignore
 +-- __init__.py
 +-- LICENSE
