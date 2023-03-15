@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 import torch
 
-from src.neural_network import ANNESI
+from src import neural_network as nn
 
 """pytest.fixtures"""
 
@@ -50,7 +50,7 @@ class TestANNESI:
 
     def setup_method(self):
         """Initiate neural network."""
-        self.annesi = ANNESI()
+        self.annesi = nn.ANNESI()
 
     def test_type_model(self):
         assert isinstance(self.annesi.model, torch.nn.Module)
@@ -121,17 +121,20 @@ class TestANNESI:
         assert 'use output with caution' in caplog.text.lower()
 
     def test_estimate(self, nn_input_data):
+        # noinspection PyTypeChecker
         nn_input_data['river_discharge'] = [7750, 20000]
         out = self.annesi.estimate(**nn_input_data, include_input=False)
         assert all(col in ['L', 'V'] for col in out.columns)
 
     def test_estimate_mod_output(self, nn_input_data):
+        # noinspection PyTypeChecker
         nn_input_data['river_discharge'] = [7750, 20000]
         self.annesi.output = 'L'
         out = self.annesi.estimate(**nn_input_data, include_input=False)
         assert all(col in ['L'] for col in out.columns)
 
     def test_estimate_incl_input(self, nn_input_data):
+        # noinspection PyTypeChecker
         nn_input_data['river_discharge'] = [7750, 20000]
         out = self.annesi.estimate(**nn_input_data, include_input=True)
         assert all(col in self.annesi.get_input_vars() + ['L', 'V'] for col in out.columns)
