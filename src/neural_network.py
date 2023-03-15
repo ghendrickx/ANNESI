@@ -56,8 +56,9 @@ class ANNESI(_backend._NeuralNetwork):
             meander_length
     ):
         """Predict output of a single set of input parameters. This single predictor provides more guidance in the type
-        of input; the `predict`- and `predict_from_file`-methods enable predictions based on multiple sets of input
+        of input; the `predict()`- and `predict_from_file()`-methods enable predictions based on multiple sets of input
         parameters, i.e. based on an input data set.
+
         :param tidal_range: tidal range
         :param surge_level: storm surge level
         :param river_discharge: river discharge
@@ -71,6 +72,7 @@ class ANNESI(_backend._NeuralNetwork):
         :param bottom_curvature: bottom curvature
         :param meander_amplitude: meander amplitude
         :param meander_length: meander length
+
         :type tidal_range: float
         :type surge_level: float
         :type river_discharge: float
@@ -84,7 +86,8 @@ class ANNESI(_backend._NeuralNetwork):
         :type bottom_curvature: float
         :type meander_amplitude: float
         :type meander_length: float
-        :return: neural network-based estimate of output
+
+        :return: model prediction
         :rtype: pandas.DataFrame, float
         """
         # convert `dict` to `pandas.DataFrame`
@@ -94,3 +97,42 @@ class ANNESI(_backend._NeuralNetwork):
         if len(self.output) == 1:
             return float(self.predict(data, scan='full').values)
         return self.predict(data, scan='full')
+
+    def predict_from_file(self, file_name, scan='full', **kwargs):
+        """Predict from *.csv-file containing all thirteen input parameters, listed in the first line of the *.csv-file.
+        If the `export` argument is a `bool` or a `str`, the predictions are exported to a *.csv-file; when the argument
+        is a `str`, this `str` is used as the file-name for this file, which defaults to 'output.csv' otherwise.
+
+        :param file_name: file-name
+        :param scan: method of scanning the input data, defaults to 'full'
+            [see `src._backend._NeuralNetwork.predict()` for help]
+        :param kwargs: optional arguments
+            wd: working directory, defaults to None
+            export: export predictions to *.csv-file, defaults to False
+            optional arguments of `pandas.read_csv()`.
+
+        :type file_name: str
+        :type scan: str, optional
+        :type kwargs: optional
+            wd: utils.path.DirConfig, str, iterable[str]
+            export: bool, str
+
+        :return: model prediction(s)
+        :return: pandas.DataFrame
+        """
+        # optional arguments
+        wd = kwargs.pop('wd', None)
+        export = kwargs.pop('export', False)
+
+        # read input data
+        data = filing.Import(wd).from_csv(file_name=file_name, **kwargs)
+
+        # predict
+        output = self.predict(data, scan=scan)
+
+        # export data
+        if export:
+            filing.Export(wd).to_csv(output, file_name=export if isinstance(export, str) else None)
+
+        # return predictions
+        return output

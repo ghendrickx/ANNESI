@@ -338,7 +338,7 @@ class _NeuralNetwork(abc.ABC):
         :type data: pandas.DataFrame
         :type scan: str, optional
 
-        :return: model prediction
+        :return: model prediction(s)
         :rtype: pandas.DataFrame
         """
         # scan input data
