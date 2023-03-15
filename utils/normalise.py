@@ -146,36 +146,3 @@ class Normalise:
         :rtype: numpy.ndarray
         """
         return self.scaler.inverse_transform(data)
-
-
-class NormalisedData:
-    """Normalised data set based on pre-fitted scaler."""
-
-    def __init__(self, data, **kwargs):
-        """
-        :param data: data
-        :param kwargs: optional arguments to `.Normalise()`
-
-        :type data: iterable[float]
-        """
-        self._norm = Normalise(**kwargs)
-        self._data = self._norm(data)
-
-    @property
-    def data(self):
-        """
-        :return: normalised data
-        :rtype: numpy.ndarray
-        """
-        return self._data
-
-    def de_normalise(self, data):
-        """De-normalise data using the inverse normalisation method.
-
-        :param data: normalised data
-        :type data: iterable[float]
-
-        :return: de-normalised data
-        :rtype: numpy.ndarray
-        """
-        return self._norm.reverse(data)
