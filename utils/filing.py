@@ -9,7 +9,7 @@ import joblib
 import torch
 import time
 
-from utils.path import DirConfig
+from utils import path
 
 LOG = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class _DataConversion:
         :param wd: working directory, defaults to None
         :type wd: DirConfig, str, list, tuple, optional
         """
-        self._wd = DirConfig(wd)
+        self._wd = path.DirConfig(wd)
 
     def _log(self, file_name):
         """Log file exported/imported.
