@@ -20,11 +20,12 @@ class DirConfig:
         :param home_dir: home directory, defaults to None
         :param create_dir: automatically create home directory if non-existent, defaults to True
 
-        :type home_dir: str, tuple, list, DirConfig
+        :type home_dir: DirConfig, str, iterable[str]
         :type create_dir: bool, optional
         """
         self._home = self._unpack(home_dir)
-        self.create_dir() if create_dir else None
+        if create_dir:
+            self.create_dir(self)
 
     def __repr__(self):
         """Representation of DirConfig."""
@@ -39,7 +40,8 @@ class DirConfig:
     def _current_dir(self):
         """Current directory.
 
-        :rtype: list
+        :return: directory
+        :rtype: list[str]
         """
         return self._as_list(os.getcwd())
 
@@ -47,7 +49,8 @@ class DirConfig:
     def _home_dir(self):
         """Absolute home directory, set to current directory if no absolute directory is provided.
 
-        :rtype: list
+        :return: directory
+        :rtype: list[str]
         """
         if not self._home:
             return self._current_dir
@@ -61,19 +64,26 @@ class DirConfig:
         """Unpack defined directory, which may be a mix of str, tuple, list, and/or DirConfig.
 
         :param directory: defined directory
-        :type directory: tuple, list
+        :type directory: iterable
 
         :return: directory
         :rtype: str
         """
         out = []
         for item in directory:
+            # directory is DirConfig
             if isinstance(item, type(self)):
                 out.append(str(item))
+
+            # directory is str
             elif isinstance(item, str):
                 out.append(str(item))
+
+            # directory is iterable[str]
             elif isinstance(item, (tuple, list)):
                 out.append(self._unpack(item))
+
+        # return directory
         return self._list2str(out)
 
     @staticmethod
@@ -83,8 +93,8 @@ class DirConfig:
         :param str_dir: string-based directory
         :type str_dir: str
 
-        :return: list-based directory
-        :rtype: list
+        :return: directory
+        :rtype: list[str]
         """
         return str_dir.replace('/', '\\').split('\\')
 
@@ -94,8 +104,8 @@ class DirConfig:
         :param folder: directory to be checked
         :type folder: str, list, tuple
 
-        :return: list-based directory
-        :rtype: list
+        :return: directory
+        :rtype: list[str]
         """
         if isinstance(folder, (str, DirConfig)):
             return self._str2list(str(folder))
@@ -115,7 +125,7 @@ class DirConfig:
         :param list_dir: list-based directory
         :type list_dir: list
 
-        :return: string-based directory
+        :return: directory
         :rtype: str
         """
         return self._sep.join(list_dir)
@@ -127,9 +137,9 @@ class DirConfig:
         :type folder: list
 
         :return: absolute directory
-        :rtype: list
+        :rtype: list[str]
         """
-        if folder[0] in self.__base_dirs:
+        if self._is_abs_dir(folder):
             return folder
         return [*self._current_dir, *folder]
 
@@ -137,65 +147,84 @@ class DirConfig:
         """Verify if directory is an absolute directory.
 
         :param folder: directory to be verified
-        :type folder: list
+        :type folder: list[str]
 
         :return: directory is an absolute directory, or not
         :rtype: bool
         """
-        if folder[0] in self.__base_dirs:
-            return True
-        return False
+        return folder[0] in self.__base_dirs
 
-    def config_dir(self, *folder, relative_dir=False):
+    def config_dir(self, *file_dir, relative_dir=False):
         """Configure directory.
 
-        :param folder: directory to be converted
+        :param file_dir: file directory
         :param relative_dir: directory as relative directory, defaults to True
 
-        :type folder: list, tuple, str
+        :type file_dir: DirConfig, str, iterable[str]
         :type relative_dir: bool, optional
 
-        :return: (absolute) configured directory
+        :return: (absolute) directory
         :rtype: str
         """
-        list_dir = self._as_list(self._unpack(folder))
+        # unpack folder(s) (and file)
+        list_dir = self._as_list(self._unpack(file_dir))
+
+        # return listed folder(s) (and file)
         if self._is_abs_dir(list_dir) or relative_dir:
             return self._list2str(list_dir)
+
+        # return home directory with listed folder(s) (and file)
         return self._list2str([*self._home_dir, *list_dir])
 
-    def create_dir(self, folder=None):
+    def create_dir(self, *file_dir):
         """Configure and create directory, if non-existing.
 
-        :param folder: directory to be created
-        :type folder: list, tuple, str
+        :param file_dir: (file) directory to be created
+        :type file_dir: DirConfig, str, iterable[str]
         """
-        folder = self.__str__() if folder is None else self.config_dir(folder)
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-            LOG.info(f'Directory created\t:\t{folder}')
-        return folder
+        # define directory
+        file_dir = self.config_dir(file_dir)
 
-    def delete_file(self, file_name):
+        # create directory
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+            LOG.info(f'Directory created\t:\t{file_dir}')
+
+        # return directory
+        return file_dir
+
+    def delete_file(self, *file_dir):
         """Delete file, if existing.
 
-        :param file_name: file name
-        :type file_name: list, tuple, str
+        :param file_dir: file directory
+        :type file_dir: DirConfig, str, iterable[str]
         """
-        if self.existence_file(file_name):
-            os.remove(self.config_dir(file_name))
-            LOG.info(f'File deleted\t:\t{self.config_dir(file_name)}')
+        # define directory
+        file_dir = self.config_dir(file_dir)
 
-    def existence_file(self, file_name):
+        # delete file
+        if self.existence_file(file_dir):
+            os.remove(file_dir)
+            LOG.info(f'File deleted\t:\t{file_dir}')
+
+    def existence_file(self, *file_dir):
         """Verify if file exists.
 
-        :param file_name: file name
-        :type file_name: list, tuple, str
+        :param file_dir: file directory
+        :type file_dir: DirConfig, str, iterable[str]
 
+        :return: existence of file (directory)
         :rtype: bool
         """
-        file = self.config_dir(file_name)
-        if os.path.exists(file):
-            LOG.info(f'File exists\t:\t{file}')
+        # define file directory
+        file_dir = self.config_dir(file_dir)
+
+        # check existence
+        if os.path.exists(file_dir):
+            # > file exists
+            LOG.info(f'File exists\t:\t{file_dir}')
             return True
-        LOG.warning(f'File does not exist\t:\t{file}')
+
+        # > file does not exist
+        LOG.warning(f'File does not exist\t:\t{file_dir}')
         return False
