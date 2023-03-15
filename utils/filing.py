@@ -26,7 +26,7 @@ def _file_name(default, extension=None):
 
         def wrapper(self, *args, **kwargs):
             """Wrapper function."""
-            file_name = _default_file_name(kwargs.pop('file_name', None), default=default, extension=extension)
+            file_name = default_file_name(kwargs.pop('file_name', None), default=default, extension=extension)
             out = func(self, *args, file_name=file_name, **kwargs)
             self._log(file_name)
             return out
@@ -36,7 +36,7 @@ def _file_name(default, extension=None):
     return decorator
 
 
-def _default_file_name(file_name, default, extension=None):
+def default_file_name(file_name, default, extension=None):
     """Use default file-name if none is defined. The extension is based on the default file-name provided if not
     stated explicitly.
 
