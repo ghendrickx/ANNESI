@@ -63,7 +63,12 @@ class Normalise:
 
     @scaler.setter
     def scaler(self, scaler_):
-        if hasattr(scaler_, 'fit') and hasattr(scaler_, 'transform'):
+        """Set normalisation scaler.
+
+        :param scaler_: scaler-object
+        :type scaler_: sklearn.base.BaseEstimator, object
+        """
+        if hasattr(scaler_, 'fit') and hasattr(scaler_, 'transform') and hasattr(scaler_, 'inverse_transform'):
             self._scaler = scaler_
         else:
             msg = f'Provided scaler-object does not comply with the requirements: ' \
