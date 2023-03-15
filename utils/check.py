@@ -99,7 +99,7 @@ def input_check(
     :rtype: list[str]
     """
     # type-checks
-    assert all(isinstance(float(p), float) for p in locals().values())
+    assert all(isinstance(p, (float, int)) for p in locals().values())
 
     # error messages
     msg = []
