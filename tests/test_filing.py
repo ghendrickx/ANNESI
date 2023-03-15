@@ -5,7 +5,7 @@ Author: Gijs G. Hendrickx
 """
 import pytest
 
-from utils import  filing
+from utils import filing
 
 
 """pytest.fixtures"""
@@ -55,3 +55,6 @@ class TestDefaultFileName:
     def test_auto_double_ext(self):
         file_name = filing._default_file_name(file_name='file.txt', default='default.csv')
         assert file_name == 'file.csv'
+
+
+# TODO: Include tests for utils.filing.Import- and .Export-classes
