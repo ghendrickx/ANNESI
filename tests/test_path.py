@@ -1,5 +1,5 @@
 """
-Tests addressing the validity of utils-related code, i.e. testing `utils.py`.
+Tests addressing the functioning of the code for defining files and directories, i.e. testing `utils.path.py`.
 
 Author: Gijs G. Hendrickx
 """
