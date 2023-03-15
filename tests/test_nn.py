@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 import torch
 
-from src.neural_network import NeuralNetwork
+from src.neural_network import ANNESI
 
 """pytest.fixtures"""
 
@@ -44,30 +44,30 @@ def nn_input_data_range(nn_input_data):
 """TestClasses"""
 
 
-class TestNeuralNetwork:
+class TestANNESI:
     """Tests for the NeuralNetwork-object."""
 
     def setup_method(self):
         """Initiate neural network."""
-        self.neural_network = NeuralNetwork()
+        self.annesi = ANNESI()
 
-    def test_type_nn(self):
-        assert isinstance(self.neural_network.nn, torch.nn.Module)
+    def test_type_model(self):
+        assert isinstance(self.annesi.model, torch.nn.Module)
 
     def test_default_output_vars(self):
-        assert all(out in ['L', 'V'] for out in self.neural_network.output)
+        assert all(out in ['L', 'V'] for out in self.annesi.output)
 
     def test_limited_output_vars(self):
-        self.neural_network.output = 'L'
-        assert all(out in ['L'] for out in self.neural_network.output)
+        self.annesi.output = 'L'
+        assert all(out in ['L'] for out in self.annesi.output)
 
     def test_limited_output_vars_fail(self, caplog):
-        with caplog.at_level(logging.CRITICAL):
-            self.neural_network.output = 'non-existing output variable'
+        with caplog.at_level(logging.WARNING):
+            self.annesi.output = 'non-existing output variable'
         assert 'unavailable output variable' in caplog.text.lower()
 
     def test_single_predict(self, nn_input_data):
-        out = self.neural_network.single_predict(**nn_input_data)
+        out = self.annesi.single_predict(**nn_input_data)
         assert len(out) == 1
         assert all(col in ['L', 'V'] for col in out.columns)
 
@@ -77,61 +77,61 @@ class TestNeuralNetwork:
             'river_discharge': 16000,
         })
         with pytest.raises(ValueError):
-            self.neural_network.single_predict(**nn_input_data)
+            self.annesi.single_predict(**nn_input_data)
 
     def test_single_predict_mod_output(self, nn_input_data):
-        self.neural_network.output = 'L'
-        out = self.neural_network.single_predict(**nn_input_data)
+        self.annesi.output = 'L'
+        out = self.annesi.single_predict(**nn_input_data)
         assert isinstance(out, float)
 
     def test_predict(self, nn_input_data_range):
-        out = self.neural_network.predict(nn_input_data_range, scan='full')
+        out = self.annesi.predict(nn_input_data_range, scan='full')
         assert len(out) == 10
         assert all(col in ['L', 'V'] for col in out.columns)
 
     def test_predict_mod_output(self, nn_input_data_range):
-        self.neural_network.output = 'L'
-        out = self.neural_network.predict(nn_input_data_range, scan='full')
+        self.annesi.output = 'L'
+        out = self.annesi.predict(nn_input_data_range, scan='full')
         assert all(col in ['L'] for col in out.columns)
 
     def test_predict_error(self, nn_input_data_range):
         nn_input_data_range['channel_depth'] = 5
         nn_input_data_range['river_discharge'] = 16000
         with pytest.raises(ValueError):
-            self.neural_network.predict(nn_input_data_range, scan='full')
+            self.annesi.predict(nn_input_data_range, scan='full')
 
     def test_predict_skip(self, nn_input_data_range):
         nn_input_data_range.loc[0, 'channel_depth'] = 5
         nn_input_data_range['river_discharge'] = 16000
-        out = self.neural_network.predict(nn_input_data_range, scan='skip')
+        out = self.annesi.predict(nn_input_data_range, scan='skip')
         assert len(out) == 9
 
     def test_predict_ignore(self, nn_input_data_range):
         nn_input_data_range.loc[0, 'channel_depth'] = 5
         nn_input_data_range['river_discharge'] = 16000
-        out = self.neural_network.predict(nn_input_data_range, scan='ignore')
+        out = self.annesi.predict(nn_input_data_range, scan='ignore')
         assert len(out) == 10
 
     def test_predict_ignore_warn(self, nn_input_data_range, caplog):
         nn_input_data_range.loc[0, 'channel_depth'] = 5
         nn_input_data_range['river_discharge'] = 16000
-        with caplog.at_level(logging.CRITICAL):
-            self.neural_network.predict(nn_input_data_range, scan='ignore')
+        with caplog.at_level(logging.WARNING):
+            self.annesi.predict(nn_input_data_range, scan='ignore')
         assert 'use output with caution' in caplog.text.lower()
 
     def test_estimate(self, nn_input_data):
         nn_input_data['river_discharge'] = [7750, 20000]
-        out = self.neural_network.estimate(**nn_input_data)
+        out = self.annesi.estimate(**nn_input_data, include_input=False)
         assert all(col in ['L', 'V'] for col in out.columns)
 
     def test_estimate_mod_output(self, nn_input_data):
         nn_input_data['river_discharge'] = [7750, 20000]
-        self.neural_network.output = 'L'
-        out = self.neural_network.estimate(**nn_input_data)
+        self.annesi.output = 'L'
+        out = self.annesi.estimate(**nn_input_data, include_input=False)
         assert all(col in ['L'] for col in out.columns)
 
     def test_estimate_incl_input(self, nn_input_data):
         nn_input_data['river_discharge'] = [7750, 20000]
-        out = self.neural_network.estimate(**nn_input_data, include_input=True)
-        assert all(col in self.neural_network.get_input_vars() + ['L', 'V'] for col in out.columns)
+        out = self.annesi.estimate(**nn_input_data, include_input=True)
+        assert all(col in self.annesi.get_input_vars() + ['L', 'V'] for col in out.columns)
         assert not all(col in ['L', 'V'] for col in out.columns)
