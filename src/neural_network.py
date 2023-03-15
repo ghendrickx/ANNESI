@@ -26,7 +26,7 @@ class NeuralNetwork(_NNData):
     _reduced_output_vars = None
     _de_norm = {'L': 2e5, 'V': 30}
 
-    def __init__(self, neural_network=None):
+    def __init__(self, neural_network=None, device=DEVICE):
         """Loads trained neural network, which is stored inside the package, by default. When a neural network is
         provided, this default network is overruled, and the provided neural network is used. It is assumed that this
         neural network has been trained upfront; if so, please make sure that the neural network is trained using the
@@ -47,9 +47,13 @@ class NeuralNetwork(_NNData):
         get inspired by the definition of the default neural network: 'neural_network._backend.MLP'.
 
         :param neural_network: (trained) neural network, defaults to None
+        :param device: running device for neural network, defaults to DEVICE
+
         :type neural_network: torch.nn.Module, optional
+        :type device: str, optional
         """
         self._nn = neural_network
+        self._device = device
 
     def __repr__(self):
         """Object representation."""
@@ -180,7 +184,10 @@ class NeuralNetwork(_NNData):
         :return: neural network-based estimate of output
         :rtype: pandas.DataFrame, float
         """
+        # convert arguments to pandas.DataFrame
         data = pd.DataFrame({k: v for k, v in locals().items() if k in self.input_vars}, index=[0])
+
+        # return output
         if len(self.output) == 1:
             return float(self.predict(data, scan='full').values)
         return self.predict(data, scan='full')
@@ -215,14 +222,15 @@ class NeuralNetwork(_NNData):
                     f'\n\nSee documentation of `NeuralNetwork.predict()` for scanning options.'
                 )
 
+        # scanning data set: skip configuration(s) if invalid
         elif scan == 'skip':
 
             def check(*args):
                 """Perform input check and return a warning when it is not passed."""
                 if input_check(*args):
-                    # input-check: failed
+                    # input check: failed
                     return None
-                # input-check: passed
+                # input check: passed
                 return args
 
             size = len(data)
@@ -231,6 +239,7 @@ class NeuralNetwork(_NNData):
             if not len(data) == size:
                 LOG.warning(f'{size - len(data)} samples have been skipped ({(size - len(data)) / size * 100:.1f}%).')
 
+        # scanning data set: ignore input check
         elif scan == 'ignore':
             msg = data.apply(lambda row: input_check(*row[self.input_vars]), axis=1)
             warnings = msg[msg.astype(bool)]
@@ -242,6 +251,7 @@ class NeuralNetwork(_NNData):
                     f'\n{warnings}'
                 )
 
+        # scanning data set: invalid scanning option
         else:
             msg = f'Scanning option {scan} not included; see documentation for help.'
             raise NotImplementedError(msg)
@@ -250,7 +260,7 @@ class NeuralNetwork(_NNData):
         norm_data = InputData.normalise(data[self.input_vars])
 
         # use neural network
-        x = torch.tensor(norm_data).float().to(DEVICE)
+        x = torch.tensor(norm_data).float().to(self._device)
         y = self.nn(x)
 
         # store as pandas.DataFrame
