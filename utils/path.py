@@ -106,6 +106,8 @@ class DirConfig:
 
         :return: directory
         :rtype: list[str]
+
+        :raises TypeError: if invalid type of `folder` is provided
         """
         if isinstance(folder, (str, DirConfig)):
             return self._str2list(str(folder))
@@ -116,7 +118,7 @@ class DirConfig:
             return list_dir
 
         else:
-            msg = f'Directory must be str, list, or tuple; {type(folder)} is given.'
+            msg = f'Directory must be str, DirConfig, list, or tuple; {type(folder)} is given.'
             raise TypeError(msg)
 
     def _list2str(self, list_dir):

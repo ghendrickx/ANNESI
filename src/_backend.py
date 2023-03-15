@@ -156,7 +156,10 @@ class _NeuralNetwork(abc.ABC):
         return self.predict(data, **kwargs)
 
     def __init_subclass__(cls):
-        """Verify if all required attributes are defined in the subclass."""
+        """Verify if all required attributes are defined in the subclass.
+
+        :raises AttributeError: if required attributes are not defined in child-class
+        """
         if not all(cls.__dict__.get(a) for a in cls._req_attr):
             attr = {a: getattr(cls, a) or 'UNDEFINED' for a in cls._req_attr}
             msg = f'Required attributes remain undefined in {cls.__name__}: {attr}'
@@ -250,6 +253,9 @@ class _NeuralNetwork(abc.ABC):
 
         :return: scanned input data
         :rtype: pandas.DataFrame
+
+        :raises ValueError: if `scan=='full'` and invalid model configurations are encountered
+        :raises NotImplementedError: if an invalid scanning method is provided
         """
         # scanning data: raise error if any sample is invalid
         if scan == 'full':

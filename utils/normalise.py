@@ -55,6 +55,8 @@ class Normalise:
         """
         :return: scaler
         :rtype: sklearn.base.TransformerMixin, type
+
+        :raises FileNotFoundError: if scaler-file is not found
         """
         # load default scaler if none is defined
         if self._scaler is None:
@@ -73,6 +75,8 @@ class Normalise:
 
         :param scaler_: scaler-object
         :type scaler_: sklearn.base.TransformerMixin, type
+
+        :raises TypeError: if provided `scaler_` is an invalid type
         """
         # valid scaler definition
         if hasattr(scaler_, 'fit') and hasattr(scaler_, 'transform') and hasattr(scaler_, 'inverse_transform'):
