@@ -8,8 +8,9 @@ of 2,000 simulations with [Delft3D Flexible Mesh](https://www.deltares.nl/en/sof
 (specifically the [D-Flow module](https://www.deltares.nl/en/software/module/d-flow-flexible-mesh/)).
 
 The neural network is contained in this repository but is accessible via a web-API on the website of 
-[SALTISolutions]() of which the `GitHub`-repository is called [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web). 
-The neural network can also be used without the web-API (see [`src`](./src)).
+[SALTISolutions](https://kbase.ncr-web.org/saltisolutions/) of which the `GitHub`-repository is called
+[`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web). The neural network can also be used without the web-API 
+(see [`src`](./src)).
 
 ## Requirements
 This repository has the following requirements (see also [`requirements.txt`](./requirements.txt)):
