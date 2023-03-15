@@ -82,7 +82,7 @@ class TestNeuralNetwork:
     def test_single_predict_mod_output(self, nn_input_data):
         self.neural_network.output = 'L'
         out = self.neural_network.single_predict(**nn_input_data)
-        assert all(col in ['L'] for col in out.columns)
+        assert isinstance(out, float)
 
     def test_predict(self, nn_input_data_range):
         out = self.neural_network.predict(nn_input_data_range, scan='full')
