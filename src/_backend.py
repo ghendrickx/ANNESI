@@ -372,7 +372,6 @@ class _NeuralNetwork(abc.ABC):
 
         :param kwargs: optional arguments
             parameter_samples: range-size of undefined input parameters, defaults to 3
-            grid_limits: include grid-limits checks, defaults to None
             scan: method of scanning the input data, defaults to 'skip'
             reset_index: reset index of pandas.DataFrame, defaults to True
             include_input: include input data, defaults to True
@@ -382,7 +381,6 @@ class _NeuralNetwork(abc.ABC):
 
         :type kwargs: optional
             parameter_samples: int
-            grid_limits: bool
             scan: str
             reset_index; bool
             include_input: bool
@@ -391,7 +389,6 @@ class _NeuralNetwork(abc.ABC):
         """
         # optional arguments
         size = kwargs.get('parameter_samples', 3)
-        grid_limits = kwargs.get('grid_limits')
         f_scaler = kwargs.get('file_scaler')
 
         # extract input data
@@ -400,7 +397,7 @@ class _NeuralNetwork(abc.ABC):
         # determine estimate when all input parameters are provided (float)
         if all(isinstance(v, (float, int)) for v in input_data.values()):
             sample = pd.DataFrame(**input_data, index=[0])
-            return self.predict(sample, scan='full', grid_limits=grid_limits)
+            return self.predict(sample, scan='full')
 
         # define input space
         scaler = self.norm.scaler if f_scaler is None else normalise.Normalise(file_scaler=f_scaler).scaler
@@ -431,7 +428,7 @@ class _NeuralNetwork(abc.ABC):
         )
 
         # predict output space
-        data[self.output] = self.predict(data, scan=kwargs.get('scan', 'skip'), grid_limits=grid_limits)
+        data[self.output] = self.predict(data, scan=kwargs.get('scan', 'skip'))
         data.dropna(inplace=True)
 
         # reset index
