@@ -20,7 +20,7 @@ _WD = path.DirConfig(__file__).config_dir('_data')
 _FILE_BASE = 'annesi'
 
 
-# TODO: Deprecate this object.
+# TODO: Deprecate this object
 class OldMLP(torch.nn.Module):
     """Multilayer Perceptron: Default neural network."""
 
