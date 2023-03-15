@@ -1,5 +1,6 @@
 """
-Tests addressing the validity of neural network-related code, i.e. testing `neural_network.py`.
+Tests addressing the validity of neural network-related code, i.e. testing `src.neural_network.py` and the supporting
+code in `src._backend.py`.
 
 Author: Gijs G. Hendrickx
 """
