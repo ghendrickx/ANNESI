@@ -52,6 +52,8 @@ class TestANNESI:
         """Initiate neural network."""
         self.annesi = nn.ANNESI()
 
+    """Initiating ANNESI"""
+
     def test_type_model(self):
         assert isinstance(self.annesi.model, torch.nn.Module)
 
@@ -67,23 +69,12 @@ class TestANNESI:
             self.annesi.output = 'non-existing output variable'
         assert 'unavailable output variable' in caplog.text.lower()
 
-    def test_single_predict(self, nn_input_data):
-        out = self.annesi.single_predict(**nn_input_data)
-        assert len(out) == 1
+    """Model predictions"""
+
+    def test_call(self, nn_input_data_range):
+        out = self.annesi(nn_input_data_range, scan='full')
+        assert len(out) == 10
         assert all(col in ['L', 'V'] for col in out.columns)
-
-    def test_single_predict_error(self, nn_input_data):
-        nn_input_data.update({
-            'channel_depth': 5,
-            'river_discharge': 16000,
-        })
-        with pytest.raises(ValueError):
-            self.annesi.single_predict(**nn_input_data)
-
-    def test_single_predict_mod_output(self, nn_input_data):
-        self.annesi.output = 'L'
-        out = self.annesi.single_predict(**nn_input_data)
-        assert isinstance(out, float)
 
     def test_predict(self, nn_input_data_range):
         out = self.annesi.predict(nn_input_data_range, scan='full')
@@ -119,6 +110,28 @@ class TestANNESI:
         with caplog.at_level(logging.WARNING):
             self.annesi.predict(nn_input_data_range, scan='ignore')
         assert 'use output with caution' in caplog.text.lower()
+
+    """Single model predictions"""
+
+    def test_single_predict(self, nn_input_data):
+        out = self.annesi.single_predict(**nn_input_data)
+        assert len(out) == 1
+        assert all(col in ['L', 'V'] for col in out.columns)
+
+    def test_single_predict_error(self, nn_input_data):
+        nn_input_data.update({
+            'channel_depth': 5,
+            'river_discharge': 16000,
+        })
+        with pytest.raises(ValueError):
+            self.annesi.single_predict(**nn_input_data)
+
+    def test_single_predict_mod_output(self, nn_input_data):
+        self.annesi.output = 'L'
+        out = self.annesi.single_predict(**nn_input_data)
+        assert isinstance(out, float)
+
+    """Model predictions with uncertainty"""
 
     def test_estimate(self, nn_input_data):
         # noinspection PyTypeChecker
