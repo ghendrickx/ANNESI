@@ -3,7 +3,7 @@ Normalisation object.
 
 Author: Gijs G. Hendrickx
 """
-from sklearn.preprocessing import StandardScaler
+import sklearn.preprocessing as spp
 
 from utils import filing, path
 
@@ -25,11 +25,15 @@ class Normalise:
 
         :type data: iterable[float]
         """
+        # fit scaler at initiation
         if data is not None:
             self.fit_scaler(data, **kwargs)
 
+        # set scaler
         if kwargs.get('scaler'):
             self.scaler = kwargs.get('scaler')
+
+        # load scaler
         elif kwargs.get('file_scaler'):
             self.load_scaler(file_name=kwargs.get('file_scaler'), wd=kwargs.get('wd'))
 
@@ -50,26 +54,31 @@ class Normalise:
     def scaler(self):
         """
         :return: scaler
-        :rtype: BaseEstimator
+        :rtype: sklearn.base.TransformerMixin, type
         """
-        if not self._scaler_is_fitted:
+        # load default scaler if none is defined
+        if self._scaler is None:
             try:
                 self.load_scaler()
             except FileNotFoundError:
                 msg = 'No scaler defined.'
                 raise FileNotFoundError(msg)
 
+        # return scaler
         return self._scaler
 
     @scaler.setter
     def scaler(self, scaler_):
-        """Set normalisation scaler.
+        """Set scaler.
 
         :param scaler_: scaler-object
-        :type scaler_: sklearn.base.BaseEstimator, object
+        :type scaler_: sklearn.base.TransformerMixin, type
         """
+        # valid scaler definition
         if hasattr(scaler_, 'fit') and hasattr(scaler_, 'transform') and hasattr(scaler_, 'inverse_transform'):
             self._scaler = scaler_
+
+        # invalid scaler definition
         else:
             msg = f'Provided scaler-object does not comply with the requirements: ' \
                 f'`fit()`-method = {hasattr(scaler_, "fit")}; `transform()`-method = {hasattr(scaler_, "transform")}'
@@ -82,11 +91,13 @@ class Normalise:
         :param wd: working directory, defaults to None
 
         :type file_name: str, optional
-        :type wd: DirConfig, str, iterable, optional
+        :type wd: utils.path.DirConfig, str, iterable, optional
         """
+        # scaler file and directory
         wd_ = wd or self._wd
         file_name_ = file_name or self._file_name
 
+        # set scaler
         self._scaler = filing.Import(wd_).from_gz(file_name=file_name_)
         self._scaler_is_fitted = True
 
@@ -99,9 +110,11 @@ class Normalise:
         :type file_name: str, optional
         :type wd: DirConfig, str, iterable[str], defaults to None
         """
+        # scaler file and directory
         wd_ = wd or self._wd
         file_name_ = file_name or self._file_name
 
+        # export scaler
         filing.Export(wd_).to_gz(self.scaler, file_name=file_name_)
 
     def fit_scaler(self, data, save=True, **kwargs):
@@ -109,14 +122,21 @@ class Normalise:
 
         :param data: data
         :param save: save scaler, defaults to True
-        :param kwargs: optional arguments for saving
+        :param kwargs: optional arguments
+            scaler: non-fitted scaler, defaults to sklearn.preprocessing.MinMaxScaler
+            file_name: file-name of scaler, if saved, defaults to None
+            wd: working directory for saving, defaults to None
 
         :type data: iterable[float]
         :type save: bool, optional
+        :type kwargs: optional
+            scaler: sklearn.base.TransformerMixin, type
+            file_name: str
+            wd: utils.path.DirConfig, str, iterable[str]
         """
         # set scaler-object
         if self._scaler is None:
-            self.scaler = kwargs.get('scaler', StandardScaler())
+            self.scaler = kwargs.get('scaler', spp.MinMaxScaler())
 
         # fit scaler
         self._scaler.fit(data)
