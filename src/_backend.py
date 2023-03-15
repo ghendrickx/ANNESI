@@ -235,7 +235,7 @@ class _NeuralNetwork(abc.ABC):
 
         self._reduced_output_vars = [k for k in output_vars if _warning(k)]
 
-    def scan_input(self, data, scan, **kwargs):
+    def scan_input(self, data, scan):
         """Scan the input space for validity of samples. Three different scanning methods are included, which determine
         the handling of invalid samples:
          1. 'full'      :   apply the input check and raise an error if there is an invalid model configuration.
@@ -244,23 +244,16 @@ class _NeuralNetwork(abc.ABC):
 
         :param data: input data
         :param scan: scanning method
-        :param kwargs: optional arguments
-            grid_limits: include grid-limits checks, defaults to False
 
         :type data: pandas.DataFrame
         :type scan: str
-        :type kwargs: optional
-            grid_limits: bool
 
         :return: scanned input data
         :rtype: pandas.DataFrame
         """
-        # optional arguments
-        grid_limits = kwargs.get('grid_limits', False)
-
         # scanning data: raise error if any sample is invalid
         if scan == 'full':
-            msg = data.apply(lambda r: self.input_check(*r[self.input_vars], grid_limits=grid_limits), axis=1)
+            msg = data.apply(lambda r: self.input_check(*r[self.input_vars]), axis=1)
             warnings = msg[msg.astype(bool)]
             if len(warnings):
                 raise ValueError(
@@ -276,7 +269,7 @@ class _NeuralNetwork(abc.ABC):
 
             def check(*args):
                 """Perform input check and return a warning when invalid samples are encountered."""
-                msg_ = self.input_check(*args, grid_limits=grid_limits)
+                msg_ = self.input_check(*args)
                 # input check: failed
                 if msg_:
                     LOG.info(msg_)
@@ -294,7 +287,7 @@ class _NeuralNetwork(abc.ABC):
 
         # scanning data set: ignore input check
         elif scan == 'ignore':
-            msg = data.apply(lambda r: self.input_check(*r[self.input_vars], grid_limits=grid_limits), axis=1)
+            msg = data.apply(lambda r: self.input_check(*r[self.input_vars]), axis=1)
             warnings = msg[msg.astype(bool)]
             if len(warnings):
                 LOG.warning(
