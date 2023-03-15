@@ -86,7 +86,7 @@ class NeuralNetwork(_NNData):
         :return: output variables
         :rtype: list
         """
-        return self.output_vars if self._reduced_output_vars is None else self._reduced_output_vars
+        return self._reduced_output_vars or self.output_vars
 
     @output.setter
     def output(self, out):
@@ -260,7 +260,7 @@ class NeuralNetwork(_NNData):
         out = self._de_normalise(df)
         return out[self.output]
 
-    def predict_from_file(self, file_name, directory=None, scan='full', **kwargs):
+    def predict_from_file(self, file_name, wd=None, scan='full', **kwargs):
         """Predict output based on input data from a file.
 
         The scanning method is based on the `scan`-argument, which can have one of three values:
@@ -269,19 +269,19 @@ class NeuralNetwork(_NNData):
          3. 'ignore'    :   ignore the input check and predict for all model configurations, invalid or valid.
 
         :param file_name: file name
-        :param directory: directory, defaults to None
+        :param wd: directory, defaults to None
         :param scan: method of scanning the input data, defaults to 'full'
         :param kwargs: pandas.read_csv key-worded arguments
 
         :type file_name: str
-        :type directory: DirConfig, str, list[str], tuple[str], optional
+        :type wd: DirConfig, str, list[str], tuple[str], optional
         :type scan: str, optional
 
         :return: prediction
         :rtype: pandas.DataFrame
         """
         # load data
-        file = DirConfig(directory).config_dir(file_name)
+        file = DirConfig(wd).config_dir(file_name)
         data = pd.read_csv(file, **kwargs)
 
         # predict output
