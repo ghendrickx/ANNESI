@@ -374,8 +374,8 @@ class _NeuralNetwork(abc.ABC):
             parameter_samples: range-size of undefined input parameters, defaults to 3
             scan: method of scanning the input data, defaults to 'skip'
             reset_index: reset index of pandas.DataFrame, defaults to True
-            include_input: include input data, defaults to True
-            statistics: return statistics of estimates, defaults to False
+            include_input: include input data, defaults to False
+            statistics: return statistics of estimates, defaults to True
             file_scaler: file of scaler to extract data ranges from, defaults to None
             kwargs: definitions of input parameters
 
@@ -436,11 +436,11 @@ class _NeuralNetwork(abc.ABC):
             data.reset_index(drop=True, inplace=True)
 
         # in-/exclude input space
-        if not kwargs.get('include_input', True):
+        if not kwargs.get('include_input', False):
             data = data[self.output]
 
         # return statistics
-        if kwargs.get('statistics', False):
+        if kwargs.get('statistics', True):
             return data.describe()
         # return estimates
         return data
