@@ -23,7 +23,7 @@ def save_init_dir_config():
 
 
 class TestDirConfig:
-    """Tests for the DirConfig-object."""
+    """Tests for the `utils.path.DirConfig`-object."""
 
     def setup_method(self):
         """Initiate standard absolute and relative directories, which are considered the true result."""

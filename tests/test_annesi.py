@@ -46,7 +46,7 @@ def nn_input_data_range(nn_input_data):
 
 
 class TestANNESI:
-    """Tests for the NeuralNetwork-object."""
+    """Tests for the `src.neural_network.ANNESI`-object."""
 
     def setup_method(self):
         """Initiate neural network."""

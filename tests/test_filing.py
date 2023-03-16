@@ -22,7 +22,7 @@ def default_file_name_():
 
 
 class TestDefaultFileName:
-    """Tests for the _default_file_name-method."""
+    """Tests for the `utils.filing.default_file_name()`-method."""
 
     def test_default(self):
         file_name = filing.default_file_name(file_name=None, default='default.txt')
