@@ -10,14 +10,14 @@ with open('README.md', 'r') as f:
 
 setup(
     name='ANNESI',
-    version='0.1',
+    version='1.0',
     author='Gijs G. Hendrickx',
     author_email='G.G.Hendrickx@tudelft.nl',
     description='An open-source artificial neural network for estuarine salt intrusion',
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=[
-        'application', 'src', 'utils',
+        'src', 'tests', 'utils',
     ],
     license='Apache-2.0',
     keywords=[],

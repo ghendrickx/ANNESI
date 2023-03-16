@@ -1,35 +1,27 @@
 """
-Neural network fitted to DFM-simulations: Backend. The neural network's frontend is in 'neural_network.py'.
+Neural network fitted to DFM-simulations: Backend. The neural network's frontend is in 'src.neural_network.py'.
 
 Author: Gijs G. Hendrickx
 """
 import abc
+import logging
 
 import numpy as np
 import pandas as pd
-import logging
+import torch
 
-import torch as torch
-from sklearn.model_selection import train_test_split
+from utils import path, normalise
 
-from utils.files_dirs import DirConfig
-from utils.data_conv import Export, Import
-
-DEVICE = 'cpu'
 LOG = logging.getLogger(__name__)
 
 """Configuration parameters"""
-_WD = DirConfig(__file__).config_dir('_data')
+DEVICE = 'cpu'
+_WD = path.DirConfig(__file__).config_dir('_data')
 _FILE_BASE = 'annesi'
-_INPUT_VARS = (
-    'tidal_range', 'surge_level', 'river_discharge', 'channel_depth', 'channel_width', 'channel_friction',
-    'convergence', 'flat_depth_ratio', 'flat_width', 'flat_friction', 'bottom_curvature', 'meander_amplitude',
-    'meander_length',
-)
-_OUTPUT_VARS = ('L', 'V')
 
 
-class MLP(torch.nn.Module):
+# TODO: Deprecate this object
+class OldMLP(torch.nn.Module):
     """Multilayer Perceptron: Default neural network."""
 
     def __init__(self, input_dim, output_dim, hidden_dim=50):
@@ -73,409 +65,396 @@ class MLP(torch.nn.Module):
         return self.features(x)
 
 
-class _NNData(abc.ABC):
-    """Parent-class that provides all basic data for all neural network related objects."""
-    _wd = DirConfig(_WD)
-    _input_vars = list(_INPUT_VARS)
-    _output_vars = list(_OUTPUT_VARS)
+class MLP(torch.nn.Module):
+    """Neural network architecture: Multilayer Perceptron."""
 
-    @property
-    def wd(self):
+    def __init__(self, input_dim, output_dim, **kwargs):
         """
-        :return: internal working directory
-        :rtype: DirConfig
-        """
-        return self._wd
+        :param input_dim: dimension of input vector
+        :param output_dim: dimension of output vector
+        :param kwargs: optional arguments
+            hidden_dim: dimension of hidden layer(s), defaults to 50
+            hidden_layers: number of hidden layers, defaults to 1
 
-    @wd.setter
-    def wd(self, wd_):
+        :type input_dim: int
+        :type output_dim: int
+        :type kwargs: optional
+            hidden_dim: int
+            hidden_layers: int
         """
-        :param wd_: working directory
-        :type wd_: DirConfig, str, iterable
-        """
-        self._wd = DirConfig(wd_)
+        super().__init__()
 
-    @staticmethod
-    def _set_vars(variables):
-        """Set variables.
+        # optional arguments
+        hidden_dim = kwargs.get('hidden_dim', 50)
+        hidden_layers = kwargs.get('hidden_layers', 1)
+        assert hidden_layers > 0
 
-        :param variables: input/output variables
-        :type variables: iterable, str
+        # hidden layers
+        hidden = hidden_layers * [torch.nn.Linear(hidden_dim, hidden_dim), torch.nn.ReLU(inplace=True)]
 
-        :return: list of variables
-        :rtype: list
-        """
-        return [variables] if isinstance(variables, str) else list(variables)
+        # neural network architecture
+        self.features = torch.nn.Sequential(
+            torch.nn.Linear(input_dim, hidden_dim),
+            torch.nn.ReLU(inplace=True),
+            *hidden,
+            torch.nn.Linear(hidden_dim, output_dim),
+        )
 
-    @property
-    def input_vars(self):
-        """
-        :return: input variables
-        :rtype: list
-        """
-        return self._input_vars
+    def forward(self, x):
+        """Forward passing of neural network.
 
-    @input_vars.setter
-    def input_vars(self, variables):
-        """
-        :param variables: input variables
-        :type variables: iterable, str
-        """
-        self.set_input_vars(variables)
+        :param x: data
+        :type x: torch.tensor
 
-    @classmethod
-    def set_input_vars(cls, variables):
-        """Set class-level input variables
-
-        :param variables: input variables
-        :type variables: iterable, str
+        :return: forward passed data
+        :rtype: torch.tensor
         """
-        cls._input_vars = cls._set_vars(variables)
-
-    @property
-    def output_vars(self):
-        """
-        :return: output variables
-        :rtype: list
-        """
-        return self._output_vars
-
-    @output_vars.setter
-    def output_vars(self, variables):
-        """
-        :param variables: output variables
-        :type variables: iterable, str
-        """
-        self.set_output_vars(variables)
-
-    @classmethod
-    def set_output_vars(cls, variables):
-        """Set class-level output variables.
-
-        :param variables: output variables
-        :type variables: iterable, str
-        """
-        cls._output_vars = cls._set_vars(variables)
+        return self.features(x)
 
 
-class Training(_NNData):
-    """Training and testing environment for a neural network, provided with (1) a neural network; (2) an optimiser; and
-    (3) a loss-function. When no data is provided for the training, the internal train data set is used; a data set of
-    thousands of simulations of idealised estuaries using the modelling system Delft3D Flexible Mesh (DFM).
+class _NeuralNetwork(abc.ABC):
+    """The interface of a neural network, which defaults to a neural network trained on a large data set of hydrodynamic
+    simulations using Delft3D Flexible Mesh (DFM). The DFM-simulations encompass idealised estuaries, and wide-ranging
+    sets of parameters are evaluated.
+
+    This is the abstract-class containing the functions of the interface. Sub-classes further detail the specifics of
+    the exact input parameters used with which configuration of neural network.
     """
+    _req_attr = '_f_scaler', 'input_vars', 'output_vars'
 
-    def __init__(self, model, optimiser, loss_function):
+    _reduced_output_vars = None
+    _model = None
+
+    _norm = None
+    _f_scaler = None
+
+    input_vars = []
+    output_vars = []
+
+    def __init__(self, **kwargs):
+        """Loads trained neural network, which is stored inside the package.
+
+        :param kwargs: optional arguments
+            device: running device for neural network, defaults to DEVICE
+
+        :type kwargs: optional
+            device: str
         """
-        :param model: neural network
-        :param optimiser: optimiser
-        :param loss_function: loss-function
+        self._device = kwargs.get('device', DEVICE)
 
-        :type model: torch.nn.Module
-        :type optimiser: torch.optim.Optimizer
-        :type loss_function: torch.loss._Loss
+    def __call__(self, data, **kwargs):
+        """Call neural network, i.e. predict output with neural network.
+
+        :param data: input data
+        :param kwargs: optional arguments of `.predict()`
+
+        :type data: pandas.DataFrame
+
+        :return: model prediction
+        :rtype: pandas.DataFrame
         """
-        self._model = model.to(DEVICE)
-        self._optimiser = optimiser
-        self._loss_function = loss_function
-
-        self._x_train, self._y_train, self._x_test, self._y_test = (None,) * 4
+        return self.predict(data, **kwargs)
 
     @property
     def model(self):
-        """
-        :return: neural network model
+        """Neural network. When none is specified during the initiation, the default neural network is loaded and used.
+
+        :return: (trained) neural network
         :rtype: torch.nn.Module
         """
+        if self._model is None:
+            self._model = self._import_model()
         return self._model
 
+    @abc.abstractmethod
+    def _import_model(self):
+        """Import trained neural network.
+
+        :return: neural network
+        :rtype: torch.nn.Module
+        """
+
+    @abc.abstractmethod
+    def input_check(self, *args, **kwargs):
+        """Execute input check.
+
+        :param args: input parameters
+        :param kwargs: optional arguments
+
+        :type args: float
+
+        :return: error messages
+        :rtype: list[str]
+        """
+
     @property
-    def optimiser(self):
-        """
-        :return: neural network optimiser
-        :rtype: torch.optim.Optimizer
-        """
-        return self._optimiser
+    def output(self):
+        """Output variables, which may be a selection of the available output parameters. The available output
+        parameters are defined by:
 
-    @property
-    def loss_function(self):
-        """
-        :return: neural network loss-function
-        :rtype: torch.loss._Loss
-        """
-        return self._loss_function
+        >>> _NeuralNetwork.get_output_vars()
 
-    def load_data(self, file_name=None, x_cols=None, y_cols=None, directory=None, test_size=.2):
-        """Load data from file that is split in a training and testing data set based on the provided test-size.
-
-        :param file_name: file name, defaults to None
-        :param x_cols: input variables, defaults to None
-        :param y_cols: output variables, defaults to None
-        :param directory: directory, defaults to None
-        :param test_size: fraction of data used for testing, defaults to 0.2
-
-        :type file_name: str, optional
-        :type x_cols: str, list[str], optional
-        :type y_cols: str, list[str], optional
-        :type directory: DirConfig, str, list[str], tuple[str], optional
-        :type test_size: float, optional
-        """
-        # load data from file
-        file_name = 'nn_data.csv' if file_name is None else file_name
-        file = DirConfig(self.wd if directory is None else directory).config_dir(file_name)
-        df = pd.read_csv(file)
-
-        # normalise input data
-        x = InputData.normalise(df[self.input_vars if x_cols is None else x_cols])
-        y = df[self.output_vars if y_cols is None else y_cols].to_numpy()
-
-        # split data in training and testing data
-        self._x_train, self._x_test, self._y_train, self._y_test = train_test_split(x, y, test_size=test_size)
-
-    def fit(self, epochs, x_train=None, y_train=None, random_sample_size=None):
-        """Fit/train neural network to training data. When no training input and output data are provided, the
-        internally stored data set is used.
-
-        :param epochs: number of epochs, i.e. iterations
-        :param x_train: training input data, defaults to None
-        :param y_train: training output data, defaults to None
-        :param random_sample_size: random sample size in training, defaults to None
-
-        :type epochs: int
-        :type x_train: iterable, optional
-        :type y_train: iterable, optional
-        :type random_sample_size: int, optional
-
-        :return: losses for every iteration
+        :return: output variables
         :rtype: list
         """
-        # set training data
-        x_train = self._x_train if x_train is None else x_train
-        y_train = self._y_train if y_train is None else y_train
+        return self._reduced_output_vars or self.output_vars
 
-        # set/determine sample sizes
-        n_train = len(x_train)
-        random_sample_size = int(.1 * n_train) if random_sample_size is None else random_sample_size
+    @output.setter
+    def output(self, output_vars):
+        """Set output variables of interest, which must be a selection of the available output parameters. The available
+        output parameters are defined by:
 
-        # initiate list of losses
-        loss_list = []
+        >>> _NeuralNetwork.get_output_vars()
 
-        # train neural network
-        for epoch in range(epochs):
-            # reset optimiser: reset all gradients to zero
-            self.optimiser.zero_grad()
+        When the output variables are set to None, this is considered as resetting the output definition, which returns
+        all available output variables.
 
-            # randomly select samples from training data
-            sel = np.random.choice(range(n_train), random_sample_size)
-            x = torch.tensor(x_train[sel]).float().to(DEVICE)
-            y_true = torch.tensor(y_train[sel]).float().to(DEVICE)
-
-            # determine model's prediction
-            y = self.model(x)
-
-            # calculate losses/errors
-            loss = self.loss_function(y, y_true)
-
-            # back-propagate information to learn
-            loss.backward()
-            self.optimiser.step()
-
-            # append performance
-            loss_list.append(float(loss.detach().cpu()))
-            LOG.info(f'Training\t:\tepoch {epoch}; loss = {loss:.4f}')
-
-        # return list of losses: model's performance
-        return loss_list
-
-    def test(self, x_test=None, y_test=None):
-        """Test neural network performance to test data. When to test input and output data are provided, the internally
-        stored data set is used.
-
-        :param x_test: test input data, defaults to None
-        :param y_test: test output data, defaults to None
-
-        :type x_test: iterable, optional
-        :type y_test: iterable, optional
-
-        :return: losses of test data
-        :rtype: float
+        :param output_vars: selection of output parameters
+        :type output_vars: iterable[str], None
         """
-        # set testing data
-        x_test = self._x_test if x_test is None else x_test
-        y_test = self._y_test if y_test is None else y_test
+        # reset to default, i.e. all output variables
+        if output_vars is None:
+            self._reduced_output_vars = None
 
-        # translate testing data to `torch.tensor`-objects
-        x = torch.tensor(x_test).float().to(DEVICE)
-        y_true = torch.tensor(y_test).float().to(DEVICE)
+        # set to (selection of) available output variables
 
-        # determine model's prediction
-        y = self.model(x)
+        def _warning(key):
+            if key not in self.output_vars:
+                LOG.warning(f'Unavailable output variable: \"{key}\" [skipped]')
+            return key in self.output_vars
 
-        # determine model's performance
-        loss = self.loss_function(y, y_true)
-        loss = float(loss.detach().cpu())
+        if isinstance(output_vars, str):
+            output_vars = [output_vars]
 
-        # return model's performance
-        LOG.info(f'Testing result (mean)\t:\t{loss:.4f}')
-        return loss
+        self._reduced_output_vars = [k for k in output_vars if _warning(k)]
 
-    def predict(self, x):
-        """Predict output data based on provided input data; i.e. use the neural network.
+    def scan_input(self, data, scan):
+        """Scan the input space for validity of samples. Three different scanning methods are included, which determine
+        the handling of invalid samples:
+         1. 'full'      :   apply the input check and raise an error if there is an invalid model configuration.
+         2. 'skip'      :   apply the input check and remove invalid model configurations from the data.
+         3. 'ignore'    :   ignore the input check and predict for all model configurations, invalid or valid.
 
-        :param x: input data
-        :type x: float, iterable
+        :param data: input data
+        :param scan: scanning method
 
-        :return: neural network prediction
-        :rtype: float, iterable
+        :type data: pandas.DataFrame
+        :type scan: str
+
+        :return: scanned input data
+        :rtype: pandas.DataFrame
+
+        :raises ValueError: if `scan=='full'` and invalid model configurations are encountered
+        :raises NotImplementedError: if an invalid scanning method is provided
         """
-        x = torch.tensor(x).float().to(DEVICE)
-        y = self.model(x)
-        return y.detach().cpu()
+        # scanning data: raise error if any sample is invalid
+        if scan == 'full':
+            msg = data.apply(lambda r: self.input_check(*r[self.input_vars]), axis=1)
+            warnings = msg[msg.astype(bool)]
+            if len(warnings):
+                raise ValueError(
+                    f'Input is considered (partly) physical invalid:'
+                    f'\n\t{len(data) - len(warnings):,} invalid samples '
+                    f'({(len(data) - len(warnings)) / len(data) * 100:.1f}%)'
+                    f'\n{warnings}'
+                    f'\n\nSee documentation for scanning options.'
+                )
 
-    def save(self, file_name=None, directory=None, to_pkl=True, to_onnx=True):
-        """Save trained neural network.
+        # scanning data set: skip invalid samples
+        elif scan == 'skip':
 
-        :param file_name: file name, defaults to None
-        :param directory: directory, defaults to None
-        :param to_pkl: save as *.pkl-file, defaults to True
-        :param to_onnx: save as *.onnx-file, defaults to True
+            def check(*args):
+                """Perform input check and return a warning when invalid samples are encountered."""
+                msg_ = self.input_check(*args)
+                # input check: failed
+                if msg_:
+                    LOG.info(msg_)
+                    return None
+                # input check: passed
+                return args
 
-        :type file_name: str, optional
-        :type directory: DirConfig, str, list[str], tuple[str], optional
-        :type to_pkl: bool, optional
-        :type to_onnx: bool, optional
-        """
-        export = Export(self.wd if directory is None else directory)
-        meta_data = {
-            'train': len(self._x_train),
-            'test': len(self._x_test)
-        }
+            size = len(data)
+            data = data.apply(lambda r: check(*[r[p] for p in self.input_vars]), axis=1, result_type='broadcast')
+            data.dropna(inplace=True)
+            if not len(data) == size:
+                LOG.warning(
+                    f'{size - len(data):,} samples have been skipped ({(size - len(data)) / size * 100:.1f}%).'
+                )
 
-        if to_pkl:
-            export.to_pkl(self.model, _FILE_BASE if file_name is None else file_name, **meta_data)
+        # scanning data set: ignore input check
+        elif scan == 'ignore':
+            msg = data.apply(lambda r: self.input_check(*r[self.input_vars]), axis=1)
+            warnings = msg[msg.astype(bool)]
+            if len(warnings):
+                LOG.warning(
+                    f'Input is considered (partly) physical invalid: Use output with caution!'
+                    f'\n\t{len(warnings):,} invalid samples '
+                    f'({len(warnings) / len(data) * 100:.1f}%)'
+                    f'\n{warnings}'
+                )
 
-        if to_onnx:
-            export.to_onnx(self.model, _FILE_BASE if file_name is None else file_name, **meta_data)
+        # scanning data set: invalid scanning option
+        else:
+            msg = f'Scanning option \"{scan}\" not included; see documentation for help.'
+            raise NotImplementedError(msg)
 
-
-class InputData(_NNData):
-    """Input data object to ensure consistent scaling."""
-    _scaler = None
-    _scaler_is_fitted = False
-
-    def __init__(self, file_name, directory=None, **kwargs):
-        """
-        :param file_name: file name of data set
-        :param directory: directory, defaults to None
-        :param kwargs: pandas.read_csv key-worded arguments
-
-        :type file_name: str
-        :type directory: DirConfig, str, list[str], tuple[str], optional
-        """
-        self._file = DirConfig(self.wd if directory is None else directory, create_dir=False).config_dir(file_name)
-
-        df = pd.read_csv(self._file, **kwargs)
-        self._raw = df[self.input_vars]
-        self._norm = pd.DataFrame(data=self.normalise(df[self.input_vars]), columns=self.input_vars)
+        # return checked data set
+        return data
 
     @property
-    def raw_data(self):
-        """Raw data; i.e. not-normalised data.
-
-        :return: raw data
-        :rtype: pandas.DataFrame
+    def norm(self):
         """
-        return self._raw
-
-    @property
-    def norm_data(self):
-        """Normalised data.
-
-        :return: normalised data
-        :rtype: pandas.DataFrame
+        :return: normalise-object
+        :rtype: normalise.Normalise
         """
+        if self._norm is None:
+            self._norm = normalise.Normalise(file_scaler=self._f_scaler)
+
         return self._norm
 
     @property
     def scaler(self):
-        """Scaler.
-
-        :return: scaler-object
-        :rtype: BaseEstimator
         """
-        self._verify_scaler()
-        return self._scaler
-
-    @classmethod
-    def get_scaler(cls):
-        """Get scaler.
-
-        :return: scaler-object
-        :rtype: BaseEstimator
+        :return: implemented scaler
+        :rtype: sklearn.preprocessing.BaseEstimator
         """
-        cls._verify_scaler()
-        return cls._scaler
+        return self.norm.scaler
 
-    @classmethod
-    def _set_scaler(cls, scaler):
-        """Set scaler, or reset scaler.
+    def predict(self, data, scan='full'):
+        """Predict output.
 
-        :param scaler: scaler
-        :type scaler: BaseEstimator, object
+        The scanning method is based on the `scan`-argument, which can have one of three values:
+         1. 'full'      :   apply the input check and raise an error if there is an invalid model configuration.
+         2. 'skip'      :   apply the input check and remove invalid model configurations from the data.
+         3. 'ignore'    :   ignore the input check and predict for all model configurations, invalid or valid.
+
+        :param data: input data
+        :param scan: method of scanning the input data, defaults to 'full'
+
+        :type data: pandas.DataFrame
+        :type scan: str, optional
+
+        :return: model prediction(s)
+        :rtype: pandas.DataFrame
         """
-        LOG.critical(f'Resetting/setting of scaler may influence performance of the neural network.')
-        if input('Continue? [y/n] ') == 'y':
-            file = input('Provide directory and file name of data to fit the scaler to: ')
-            if not DirConfig().existence_file(file):
-                raise FileNotFoundError(file)
-            fit_data = pd.read_csv(file)
+        # scan input data
+        data = self.scan_input(data[self.input_vars], scan=scan)
 
-            cls._scaler = scaler
-            cls._scaler.fit(fit_data[cls._input_vars])
-            cls._scaler_is_fitted = True
+        # normalise input data
+        norm_data = self.norm(data)
 
-            if input('Normalise raw data? [y/n] ') == 'y':
-                LOG.warning('Not yet implemented.')
+        # use neural network
+        x = torch.tensor(norm_data).float().to(self._device)
+        y = self.model(x)
 
-            if input('Save scaler? [y/n] ') == 'y':
-                if input('Overwrite internal scaler? [y/n] ') == 'y':
-                    Export(_WD).to_gz(cls._scaler, file_name=_FILE_BASE)
-                else:
-                    directory = input('Provide directory: ')
-                    file_name = input('Provide file name: ')
-                    Export(directory).to_gz(cls._scaler, file_name=file_name)
+        # store as pandas.DataFrame
+        output = pd.DataFrame(data=y.detach().cpu(), columns=self.output_vars, dtype=float, index=data.index)
 
-    @classmethod
-    def normalise(cls, data):
-        """Normalise data.
+        # return selected output
+        return output[self.output]
 
-        :param data: data to be normalised
-        :type data: iterable
+    def estimate(self, **kwargs):
+        """Provides an estimate for incomplete input data. The rough estimate is based on assessing a range values of
+        the undefined parameter(s). Based on the resulting spreading, a rough estimate is provided. A parameter can also
+        be given as a list (or tuple) containing the minimum and maximum values of a range of interest. Between these
+        two provided extremes, a number of samples are evaluated (equal to `parameter_samples`).
 
-        :return: normalised data
-        :rtype: numpy.array
+        The size of the range assessed per undefined parameter is defined by `parameter_samples`, which iterates through
+        the minimum and maximum of the undefined parameter. Multiple values are assessed due to the expected non-linear
+        response. However, the number of iterations may rise quickly when more parameters remain undefined: The number
+        of iterations required equals `parameter_samples` to the power of the number of undefined parameters. As an
+        example, with `parameter_samples` equal to 3 (default), and three undefined parameters, the total number of
+        iterations equals 3 ** 3, or 27.
+
+        :param kwargs: optional arguments
+            parameter_samples: range-size of undefined input parameters, defaults to 3
+            scan: method of scanning the input data, defaults to 'skip'
+            reset_index: reset index of pandas.DataFrame, defaults to True
+            include_input: include input data, defaults to False
+            statistics: return statistics of estimates, defaults to True
+            file_scaler: file of scaler to extract data ranges from, defaults to None
+            kwargs: definitions of input parameters
+
+        :type kwargs: optional
+            parameter_samples: int
+            scan: str
+            reset_index; bool
+            include_input: bool
+            file_scaler: str
+            statistics: bool
         """
-        if not cls._scaler_is_fitted:
-            try:
-                cls._load()
-            except FileNotFoundError:
-                LOG.critical(f'Scaler file not found; normalisation not possible.')
-                cls._scaler_is_fitted = False
-                return None
+        # optional arguments
+        size = kwargs.get('parameter_samples', 3)
+        f_scaler = kwargs.get('file_scaler')
 
-        return cls._scaler.transform(data)
+        # extract input data
+        input_data = {k: kwargs.get(k) for k in self.input_vars}
+
+        # determine estimate when all input parameters are provided (float)
+        if all(isinstance(v, (float, int)) for v in input_data.values()):
+            sample = pd.DataFrame(**input_data, index=[0])
+            return self.predict(sample, scan='full')
+
+        # define input space
+        scaler = self.norm.scaler if f_scaler is None else normalise.Normalise(file_scaler=f_scaler).scaler
+        arrays = dict()
+        for i, v in enumerate(self.input_vars):
+            # no range defined
+            if input_data.get(v) is None:
+                arrays[v] = np.linspace(scaler.data_min_[i], scaler.data_max_[i], size)
+            # single value definition
+            elif isinstance(input_data[v], (float, int)):
+                arrays[v] = input_data[v]
+            # range defined
+            elif len(input_data[v]) == 2:
+                v_min = max(min(input_data[v]), scaler.data_min_[i])
+                v_max = min(max(input_data[v]), scaler.data_max_[i])
+                arrays[v] = np.linspace(v_min, v_max, size)
+                # warning message: range outside training data
+                if min(input_data[v]) < scaler.data_min_[i] or max(input_data[v]) > scaler.data_max_[i]:
+                    LOG.warning(f'Defined range exceeds training data; \"{v}\" range used: {v_min, v_max}')
+            # array defined
+            else:
+                arrays[v] = input_data[v]
+
+        # create input space
+        data = pd.DataFrame(
+            data=np.array(np.meshgrid(*[v for v in arrays.values()])).T.reshape(-1, len(arrays)),
+            columns=self.input_vars
+        )
+
+        # predict output space
+        data[self.output] = self.predict(data, scan=kwargs.get('scan', 'skip'))
+        data.dropna(inplace=True)
+
+        # reset index
+        if kwargs.get('reset_index', True):
+            data.reset_index(drop=True, inplace=True)
+
+        # in-/exclude input space
+        if not kwargs.get('include_input', False):
+            data = data[self.output]
+
+        # return statistics
+        if kwargs.get('statistics', True):
+            return data.describe()
+        # return estimates
+        return data
 
     @classmethod
-    def _verify_scaler(cls):
-        """Verify if scaler is loaded and/or fitted."""
-        if not cls._scaler_is_fitted:
-            try:
-                cls._load()
-            except FileNotFoundError:
-                LOG.critical(f'Scaler file not found; no scaler defined.')
-                cls._scaler_is_fitted = False
+    def get_input_vars(cls):
+        """Get class-level defined input variables.
+
+        :return: input variables
+        :rtype: list
+        """
+        return cls.input_vars
 
     @classmethod
-    def _load(cls):
-        """Load scaler data."""
-        cls._scaler = Import(_WD).from_gz(file_name=_FILE_BASE)
-        cls._scaler_is_fitted = True
+    def get_output_vars(cls):
+        """get class-level defined output variables.
+
+        :return: output variables
+        :rtype: list
+        """
+        return cls.output_vars

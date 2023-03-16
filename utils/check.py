@@ -30,25 +30,32 @@ def _tidal_prism(tidal_range, depth, width, min_width, friction, convergence):
     :return: tidal prism
     :rtype: float
     """
-    length = 8e4
-    # gravitational acceleration
-    g = 9.81
-    # tidal wave
-    velocity = 1 / (2 * np.sqrt(2)) * np.sqrt(g / depth) * tidal_range
+    # constants
+    gravity = 9.81
+    length = 2e5
     period = 12 * 3600
-    k = 1 / (period * np.sqrt(g * depth))
+
+    # tidal wave
+    velocity = 1 / (2 * np.sqrt(2)) * np.sqrt(gravity / depth) * tidal_range
+    k = 1 / (period * np.sqrt(gravity * depth))
+
     # friction parameter
     m = 8 / (3 * np.pi) * friction * velocity / depth
+
     # damping parameter
     val = -1 + (.5 * convergence / k) ** 2
     mu = k / np.sqrt(2) * np.sqrt(val + np.sqrt(val ** 2 + (m * period) ** 2))
+
     # tidal damping
     damping = -.5 * convergence + mu
+
     # tidal prism
     prism = .5 * tidal_range * (
             min_width / damping * (1 - np.exp(-damping * length)) +
             (width - min_width) / (convergence + damping) * (1 - np.exp(-(convergence + damping) * length))
     )
+
+    # return tidal prism and period
     return prism, period
 
 
@@ -87,9 +94,12 @@ def input_check(
     :param bottom_curvature: channel bottom curvature
     :param meander_amplitude: meander amplitude
     :param meander_length: meander length
+
+    :return: list with error messages
+    :rtype: list[str]
     """
     # type-checks
-    assert all(isinstance(float(p), float) for p in locals().values())
+    assert all(isinstance(p, (float, int)) for p in locals().values())
 
     # error messages
     msg = []
@@ -110,8 +120,8 @@ def input_check(
 
     # flat depth-check 2
     flat_depth = .5 * flat_depth_ratio * tidal_range
-    if not -flat_depth > -channel_depth:
-        msg.append(f'flat_depth       : {flat_depth:.2f} must be larger than {-channel_depth:.2f}.')
+    if not flat_depth < channel_depth:
+        msg.append(f'flat_depth       : {flat_depth:.2f} must be smaller than {channel_depth:.2f}.')
 
     # flat width-check
     flat_width_ratio = 1 + flat_width / channel_width
@@ -149,5 +159,5 @@ def input_check(
     if not velocity <= velocity_max:
         msg.append(f'flow velocity    : {velocity:.2f} must be smaller than {velocity_max:.2f}.')
 
-    # msg check-results
+    # return check-results
     return msg
