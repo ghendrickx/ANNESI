@@ -13,7 +13,7 @@ class Normalise:
     _scaler = None
     _scaler_is_fitted = False
 
-    _file_name = 'scaler'
+    _file_name = 'annesi'
     _wd = path.DirConfig(__file__).config_dir('_data')
 
     def __init__(self, data=None, **kwargs):
