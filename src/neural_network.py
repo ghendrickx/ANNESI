@@ -9,7 +9,7 @@ import pandas as pd
 import torch
 
 from src import _backend
-from utils import check, filing, path
+from utils import check, filing, path, decorators
 
 _LOG = logging.getLogger(__name__)
 
@@ -136,3 +136,59 @@ class ANNESI(_backend._NeuralNetwork):
 
         # return predictions
         return output
+
+
+@decorators.deprecated(msg='Use `src.neural_network.ANNESI` instead')
+class NeuralNetwork(ANNESI):
+    """The interface of a neural network, which defaults to a neural network trained on a large data set of hydrodynamic
+    simulations using Delft3D Flexible Mesh (DFM). The DFM-simulations encompass idealised estuaries, and wide-ranging
+    sets of parameters are evaluated.
+    """
+
+    @property
+    @decorators.deprecated(msg='Use the `model`-attribute instead')
+    def nn(self):
+        """The default neural network (i.e. ANNESI) is loaded, despite any neural network provided with the initiation.
+        This property is included for backward compatibility but the whole object will be deprecated in the next full
+        version release: release of `ANNESI-v2.0`.
+
+        :return: neural network
+        :rtype: torch.nn.Module
+        """
+        return self.model
+
+    @decorators.deprecated(msg='Its functionality will be removed')
+    def save_as(self, f_type, file_name=None, directory=None):
+        """Save neural network as one of the available export-formats:
+         1. *.pkl   :   for usage within Python, using PyTorch.
+         2. *.onnx  :   for integration of neural network in a website.
+
+        :param f_type: file-type
+        :param file_name: file-name, defaults to None
+        :param directory: directory, defaults to None
+
+        :type f_type: str
+        :type file_name: str, optional
+        :type directory: DirConfig, str, iterable[str], optional
+        """
+        # check available export-formats
+        f_types = ('pkl', 'onnx')
+        if f_type not in f_types:
+            msg = f'NeuralNetwork can only be saved as {f_types}, {f_type} has been specified.'
+            raise NotImplementedError(msg)
+
+        # internally save neural network
+        if directory == 'internal-save':
+            msg = 'About to save neural network internally. This might overwrite an existing version. Continue? [y/n]'
+            if input(msg) == 'y':
+                directory = _backend._WD
+            else:
+                msg = 'Internally saving neural network aborted.'
+                raise KeyboardInterrupt(msg)
+
+        # export neural network
+        export = filing.Export(directory)
+        if f_type == 'pkl':
+            export.to_pkl(self.nn, file_name=file_name)
+        elif f_type == 'onnx':
+            export.to_onnx(self.nn, file_name=file_name)
