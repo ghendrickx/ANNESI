@@ -120,8 +120,8 @@ def input_check(
 
     # flat depth-check 2
     flat_depth = .5 * flat_depth_ratio * tidal_range
-    if not -flat_depth > -channel_depth:
-        msg.append(f'flat_depth       : {flat_depth:.2f} must be larger than {-channel_depth:.2f}.')
+    if not flat_depth < channel_depth:
+        msg.append(f'flat_depth       : {flat_depth:.2f} must be smaller than {channel_depth:.2f}.')
 
     # flat width-check
     flat_width_ratio = 1 + flat_width / channel_width
