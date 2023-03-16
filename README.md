@@ -119,6 +119,28 @@ When using this repository, please cite accordingly:
 The neural network, and so [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web), are subject to updates. These 
 updates are reflected by different versions of the repository.
 
+### v1.0
+_Release date: September 9, 2022._
+
+*   First stable release of `ANNESI`.
+
+### v1.1
+_Release data: March XX, 2023._
+
+*   Improvements in structure: 
+    *   `NeuralNetwork` is replaced by `ANNESI` (from [`src.neural_network`](src/neural_network.py)).
+    *   `NeuralNetwork` will be deprecated (warnings added).
+    *   The `nn`-property and `save_as()`-methods of `NeuralNetwork` will be deprecated and are not transferred to
+        `ANNESI`; all other functions remain.
+    *   The `predict_from_file()`-method of `ANNESI` optionally exports the model predictions to a `*.csv`-file.
+*   Addition of tests:
+    *   Added [tests](tests/test_check.py) for the input check.
+    *   Added [tests](tests/test_normalise.py) for normalisations.
+    *   Extended [tests](tests/test_filing.py) for importing and exporting of data.
+*   Updates related references.
+
+    
+
 ### Related references
 The neural network is used as part of the following peer-reviewed articles:
 
