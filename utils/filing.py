@@ -84,12 +84,64 @@ class _DataConversion:
         LOG.info(f'File {self.__class__.__name__.lower()}ed\t:\t{self._wd.config_dir(file_name)}')
 
     @property
-    def working_dir(self):
+    def wd(self):
         """
         :return: working directory
         :rtype: DirConfig
         """
         return self._wd
+
+
+class Import(_DataConversion):
+    """Importing data/files."""
+    _wd = None
+
+    @_file_name(default='data.csv')
+    def from_csv(self, *, file_name=None, **kwargs):
+        """Load data from a *.csv-file.
+
+        :param file_name: file name, defaults to None
+        :param kwargs: optional arguments for `pandas.read_csv()`
+
+        :type file_name: str, optional
+
+        :return: data
+        :rtype: pandas.DataFrame
+        """
+        # read data
+        return pd.read_csv(self.wd.config_dir(file_name), **kwargs)
+
+    @_file_name(default='annesi.gz')
+    def from_gz(self, *, file_name=None):
+        """Load fitted scaler from previous fitting to re-use from a *.gz-file.
+
+        :param file_name: file name, defaults to None
+        :type file_name: str, optional
+
+        :return: scaler
+        :rtype: BaseEstimator
+        """
+        # import scaler
+        return joblib.load(self.wd.config_dir(file_name))
+
+    @_file_name(default='annesi.pkl')
+    def from_pkl(self, model, *, file_name=None):
+        """Load previously trained neural network to (re-)use from a *.pkl-file.
+
+        :param model: neural network design
+        :param file_name: file name
+
+        :type model: torch.nn.Module
+        :type file_name: str, optional
+
+        :return: trained neural network
+        :rtype: torch.nn.Module
+        """
+        # import neural network
+        model.load_state_dict(torch.load(self.wd.config_dir(file_name)))
+
+        # return neural network
+        return model
 
 
 class Export(_DataConversion):
@@ -118,7 +170,7 @@ class Export(_DataConversion):
             data = pd.DataFrame(data=data)
 
         # export to *.csv
-        data.to_csv(self._wd.config_dir(file_name), index=index, **kwargs)
+        data.to_csv(self.wd.config_dir(file_name), index=index, **kwargs)
 
     @_file_name(default='scaler.gz')
     def to_gz(self, scaler, *, file_name=None):
@@ -133,7 +185,7 @@ class Export(_DataConversion):
         :return: *.gz-file
         """
         # export scaler
-        joblib.dump(scaler, self._wd.config_dir(file_name))
+        joblib.dump(scaler, self.wd.config_dir(file_name))
 
     @_file_name(default='annesi.pkl')
     def to_pkl(self, neural_network, *, file_name=None, **kwargs):
@@ -149,7 +201,7 @@ class Export(_DataConversion):
         :return: *.pkl-file
         """
         # export neural network as *.pkl
-        torch.save(neural_network.state_dict(), self.working_dir.config_dir(file_name))
+        torch.save(neural_network.state_dict(), self.wd.config_dir(file_name))
 
         # export meta-data
         self._export_meta_data(file_name=f'{file_name.split(".")[0]}-pkl.txt', model=neural_network, **kwargs)
@@ -174,7 +226,7 @@ class Export(_DataConversion):
         dummy_input = torch.randn(1, neural_network.features[0].in_features)
 
         # export neural network as *.onnx
-        torch.onnx.export(neural_network, dummy_input, self.working_dir.config_dir(file_name))
+        torch.onnx.export(neural_network, dummy_input, self.wd.config_dir(file_name))
 
         # export meta-data
         self._export_meta_data(file_name=f'{file_name.split(".")[0]}-onnx.txt', model=neural_network, **kwargs)
@@ -196,7 +248,7 @@ class Export(_DataConversion):
 
         :type file_name: str, optional
         """
-        with open(self.working_dir.config_dir(file_name), mode='w') as f:
+        with open(self.wd.config_dir(file_name), mode='w') as f:
             f.write(f'Model exported on {time.ctime(time.time())}\n')
 
             if kwargs.get('model'):
@@ -215,55 +267,3 @@ class Export(_DataConversion):
 
             if kwargs.get('train') and kwargs.get('test'):
                 f.write(f'Size of overall data set: {kwargs.get("train") + kwargs.get("test")}\n')
-
-
-class Import(_DataConversion):
-    """Importing data/files."""
-    _wd = None
-
-    @_file_name(default='data.csv')
-    def from_csv(self, *, file_name=None, **kwargs):
-        """Load data from a *.csv-file.
-
-        :param file_name: file name, defaults to None
-        :param kwargs: optional arguments for `pandas.read_csv()`
-
-        :type file_name: str, optional
-
-        :return: data
-        :rtype: pandas.DataFrame
-        """
-        # read data
-        return pd.read_csv(self._wd.config_dir(file_name), **kwargs)
-
-    @_file_name(default='annesi.gz')
-    def from_gz(self, *, file_name=None):
-        """Load fitted scaler from previous fitting to re-use from a *.gz-file.
-
-        :param file_name: file name, defaults to None
-        :type file_name: str, optional
-
-        :return: scaler
-        :rtype: BaseEstimator
-        """
-        # import scaler
-        return joblib.load(self._wd.config_dir(file_name))
-
-    @_file_name(default='annesi.pkl')
-    def from_pkl(self, model, *, file_name=None):
-        """Load previously trained neural network to (re-)use from a *.pkl-file.
-
-        :param model: neural network design
-        :param file_name: file name
-
-        :type model: torch.nn.Module
-        :type file_name: str, optional
-
-        :return: trained neural network
-        :rtype: torch.nn.Module
-        """
-        # import neural network
-        model.load_state_dict(torch.load(self._wd.config_dir(file_name)))
-
-        # return neural network
-        return model
