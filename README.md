@@ -1,3 +1,5 @@
+![Tests](https://github.com/ghendrickx/ANNESI/actions/workflows/tests.yml/badge.svg)
+
 # ANNESI: Artificial neural network for estuarine salt intrusion
 This repository is part of a PhD research on developing nature-based solutions to mitigate salt intrusion (for more 
 information, see the [central repository](https://github.com/ghendrickx/SALTISolutions)).
