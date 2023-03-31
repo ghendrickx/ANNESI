@@ -25,14 +25,3 @@ jobs:
     - name: Test with pytest
       run: |
         python -m pytest tests/
-    - name: Set status check
-      uses: peter-evans/create-pull-request-comment@v3
-      with:
-        message: |
-          {% if job.status == 'succes' %}
-          Tests passed
-          {% else %}
-          Tests failed
-          {% endif %}
-        check-name: Tests
-        token: ${{ secrets.GITHUB_TOKEN }}
