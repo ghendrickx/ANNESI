@@ -238,7 +238,7 @@ There are a few other options available when using the neural network:
     `NeuralNetwork.get_output_vars()`. (An overview of the input parameters can be extracted with 
     `NeuralNetwork.get_input_vars()`.)
     
-*   The `estimate()`-method can also return the (statistics of) the input parameters used for the stochastic approach:
+*   The `estimate()`-method can also return (the statistics of) the input parameters used for the stochastic approach:
     ```python
     from src.neural_network import ANNESI
 
