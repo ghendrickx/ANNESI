@@ -136,11 +136,15 @@ class _NeuralNetwork(abc.ABC):
 
         :param kwargs: optional arguments
             device: running device for neural network, defaults to DEVICE
+            output: output variables, defaults to None
 
         :type kwargs: optional
             device: str
+            output: str, iterable[str]
         """
         self._device = kwargs.get('device', DEVICE)
+
+        self.output = kwargs.get('output')
 
     def __call__(self, data, **kwargs):
         """Call neural network, i.e. predict output with neural network.
