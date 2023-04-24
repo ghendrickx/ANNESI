@@ -108,14 +108,16 @@ The neural network is stored in the [`src`](./src)-folder:
 ## Author
 Gijs G. Hendrickx 
 [![alt text](https://camo.githubusercontent.com/e1ec0e2167b22db46b0a5d60525c3e4a4f879590a04c370fef77e6a7e00eb234/68747470733a2f2f696e666f2e6f726369642e6f72672f77702d636f6e74656e742f75706c6f6164732f323031392f31312f6f726369645f31367831362e706e67) 0000-0001-9523-7657](https://orcid.org/0000-0001-9523-7657)
-(Delft University of Technology).
+(_Delft University of Technology_).
 
-Contact: [G.G.Hendrickx@tudelft.nl](mailto:G.G.Hendrickx@tudelft.nl?subject=[GitHub]%20ANNESI: ).
+Contact: [G.G.Hendrickx@tudelft.nl](mailto:G.G.Hendrickx@tudelft.nl?subject=[GitHub]%20ANNESI:%20).
 
 ## References
 When using this repository, please cite accordingly:
-> Hendrickx, G.G. (2022). ANNESI: An open-source artificial neural network for estuarine salt intrusion. 
-4TU.ResearchData. Software. [doi:10.4121/19307693](https://doi.org/10.4121/19307693).
+> Hendrickx, G.G. (2022). 
+ANNESI: An open-source artificial neural network for estuarine salt intrusion. 
+4TU.ResearchData. Software. 
+DOI:[10.4121/19307693](https://doi.org/10.4121/19307693).
 
 ### Version-control
 The neural network, and so [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web), are subject to updates. These 
@@ -127,7 +129,7 @@ _Release date: September 9, 2022._
 *   First stable release of `ANNESI`.
 
 ### v1.1
-_Release data: March XX, 2023._
+_Release data: May XX, 2023._
 
 *   Improvements in structure: 
     *   `NeuralNetwork` is replaced by `ANNESI` (from [`src.neural_network`](src/neural_network.py)).
@@ -151,8 +153,8 @@ The neural network is used as part of the following peer-reviewed articles:
     [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
     (2023).
     Predicting the response of complex systems for coastal management. 
-    _Coastal Engineering_, TBD(TBD):TBD-TBD
-    doi:[10.1016/j.coastaleng.2023.104289](https://doi.org/10.1016/j.coastaleng.2023.104289).
+    _Coastal Engineering_, 182:104289.
+    DOI:[10.1016/j.coastaleng.2023.104289](https://doi.org/10.1016/j.coastaleng.2023.104289).
     
 *   [Hendrickx, G.G.](https://orcid.org/0000-0001-9523-7657),
     [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913),
@@ -160,7 +162,10 @@ The neural network is used as part of the following peer-reviewed articles:
     [Huismans, Y.](https://orcid.org/0000-0001-6537-6111),
     [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257), and
     [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
-    (TBD). TBD. doi:[TBD]().
+    (_submitted_). 
+    Sensitivity of salt intrusion to estuary-scale changes: 
+    A systematic modelling study towards nature-based mitigation measures.
+    _Estuarine, Coastal and Shelf Science_.
 
 The neural network (and its [web-API](https://github.com/ghendrickx/ANNESI-web)) has been part of presentations at the 
 following conferences (_presenter in **bold**_):
