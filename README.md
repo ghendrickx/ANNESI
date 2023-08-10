@@ -70,8 +70,98 @@ This will return the salt intrusion length (in metres):
 In addition to the above basic usage of the neural network, some more elaborate use-cases are supported by the
 neural network. These are demonstrated in the [`src`](./src)-folder.
 
+## Author
+Gijs G. Hendrickx 
+[![alt text](https://camo.githubusercontent.com/e1ec0e2167b22db46b0a5d60525c3e4a4f879590a04c370fef77e6a7e00eb234/68747470733a2f2f696e666f2e6f726369642e6f72672f77702d636f6e74656e742f75706c6f6164732f323031392f31312f6f726369645f31367831362e706e67) 0000-0001-9523-7657](https://orcid.org/0000-0001-9523-7657)
+(_Delft University of Technology_).
+
+Contact: [G.G.Hendrickx@tudelft.nl](mailto:G.G.Hendrickx@tudelft.nl?subject=[GitHub]%20ANNESI:%20).
+
+## References
+When using this repository, please cite accordingly:
+>   Hendrickx, G.G. 
+    (2022). 
+    ANNESI: An open-source artificial neural network for estuarine salt intrusion. 
+    4TU.ResearchData. Software. 
+    doi:[10.4121/19307693](https://doi.org/10.4121/19307693).
+
+### Version-control
+The neural network, and so [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web), are subject to updates. These 
+updates are reflected by different versions of the repository.
+
+### v1.0
+_Release date: September 9, 2022._
+
+*   First stable release of `ANNESI`.
+
+### v1.1
+_Release data: XX XX, 2023._
+
+*   Improvements in structure: 
+    *   `NeuralNetwork` is replaced by `ANNESI` (from [`src.neural_network`](src/neural_network.py)).
+    *   `NeuralNetwork` will be deprecated (warnings added).
+    *   The `nn`-property and `save_as()`-methods of `NeuralNetwork` will be deprecated and are not transferred to
+        `ANNESI`; all other functions remain.
+    *   The `predict_from_file()`-method of `ANNESI` optionally exports the model predictions to a `*.csv`-file.
+*   Addition of tests:
+    *   Added [tests](tests/test_check.py) for the input check.
+    *   Added [tests](tests/test_normalise.py) for normalisations.
+    *   Extended [tests](tests/test_filing.py) for importing and exporting of data.
+*   Updates related references.
+
+    
+
+### Related references
+The neural network is used as part of the following peer-reviewed articles:
+
+*   [Hendrickx, G.G.](https://orcid.org/0000-0001-9523-7657),
+    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817), and
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
+    (2023).
+    Predicting the response of complex systems for coastal management. 
+    _Coastal Engineering_, **182**:104289.
+    doi:[10.1016/j.coastaleng.2023.104289](https://doi.org/10.1016/j.coastaleng.2023.104289).
+    
+*   [Hendrickx, G.G.](https://orcid.org/0000-0001-9523-7657),
+    [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913),
+    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817),
+    [Huismans, Y.](https://orcid.org/0000-0001-6537-6111),
+    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257), and
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
+    (_in review_). 
+    Sensitivity of salt intrusion to estuary-scale changes: 
+    A systematic modelling study towards nature-based mitigation measures.
+    _Estuarine, Coastal and Shelf Science_.
+
+The neural network (and its [web-API](https://github.com/ghendrickx/ANNESI-web)) has been part of presentations at the 
+following conferences (_presenter in **bold**_):
+    
+*   [**Hendrickx, G.G.**](https://orcid.org/0000-0001-9523-7657),
+    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817),
+    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257),
+    [Huismans, Y.](https://orcid.org/0000-0001-6537-6111),
+    [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913), and
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
+    March 4, 2022.
+    Combining machine learning and process-based models to enhance the understanding of estuarine salt intrusion and
+    development of estuary-scale nature-based solutions. 
+    _Ocean Sciences Meeting 2022_.
+    Online.
+    
+*   [**Hendrickx, G.G.**](https://orcid.org/0000-0001-9523-7657),
+    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817),
+    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341), and
+    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257)
+    December 5, 2022.
+    Estuarine sensitivity to nature-based salt intrusion mitigation measures.
+    _37th International Conference on Coastal Engineering 2022_.
+    Sydney, Australia.
+
+## License
+This repository is licensed under [`Apache License 2.0`](LICENSE).
+
 ## Structure
-The neural network is stored in the [`src`](./src)-folder:
+The neural network is stored in the [`src`](./src)-directory:
 ```
 +-- src/
 |   +-- _data/
@@ -104,92 +194,3 @@ The neural network is stored in the [`src`](./src)-folder:
 +-- requirements.txt
 +-- setup.py
 ```
-
-## Author
-Gijs G. Hendrickx 
-[![alt text](https://camo.githubusercontent.com/e1ec0e2167b22db46b0a5d60525c3e4a4f879590a04c370fef77e6a7e00eb234/68747470733a2f2f696e666f2e6f726369642e6f72672f77702d636f6e74656e742f75706c6f6164732f323031392f31312f6f726369645f31367831362e706e67) 0000-0001-9523-7657](https://orcid.org/0000-0001-9523-7657)
-(_Delft University of Technology_).
-
-Contact: [G.G.Hendrickx@tudelft.nl](mailto:G.G.Hendrickx@tudelft.nl?subject=[GitHub]%20ANNESI:%20).
-
-## References
-When using this repository, please cite accordingly:
-> Hendrickx, G.G. (2022). 
-ANNESI: An open-source artificial neural network for estuarine salt intrusion. 
-4TU.ResearchData. Software. 
-DOI:[10.4121/19307693](https://doi.org/10.4121/19307693).
-
-### Version-control
-The neural network, and so [`ANNESI-web`](https://github.com/ghendrickx/ANNESI-web), are subject to updates. These 
-updates are reflected by different versions of the repository.
-
-### v1.0
-_Release date: September 9, 2022._
-
-*   First stable release of `ANNESI`.
-
-### v1.1
-_Release data: May XX, 2023._
-
-*   Improvements in structure: 
-    *   `NeuralNetwork` is replaced by `ANNESI` (from [`src.neural_network`](src/neural_network.py)).
-    *   `NeuralNetwork` will be deprecated (warnings added).
-    *   The `nn`-property and `save_as()`-methods of `NeuralNetwork` will be deprecated and are not transferred to
-        `ANNESI`; all other functions remain.
-    *   The `predict_from_file()`-method of `ANNESI` optionally exports the model predictions to a `*.csv`-file.
-*   Addition of tests:
-    *   Added [tests](tests/test_check.py) for the input check.
-    *   Added [tests](tests/test_normalise.py) for normalisations.
-    *   Extended [tests](tests/test_filing.py) for importing and exporting of data.
-*   Updates related references.
-
-    
-
-### Related references
-The neural network is used as part of the following peer-reviewed articles:
-
-*   [Hendrickx, G.G.](https://orcid.org/0000-0001-9523-7657),
-    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817), and
-    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
-    (2023).
-    Predicting the response of complex systems for coastal management. 
-    _Coastal Engineering_, 182:104289.
-    DOI:[10.1016/j.coastaleng.2023.104289](https://doi.org/10.1016/j.coastaleng.2023.104289).
-    
-*   [Hendrickx, G.G.](https://orcid.org/0000-0001-9523-7657),
-    [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913),
-    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817),
-    [Huismans, Y.](https://orcid.org/0000-0001-6537-6111),
-    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257), and
-    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
-    (_submitted_). 
-    Sensitivity of salt intrusion to estuary-scale changes: 
-    A systematic modelling study towards nature-based mitigation measures.
-    _Estuarine, Coastal and Shelf Science_.
-
-The neural network (and its [web-API](https://github.com/ghendrickx/ANNESI-web)) has been part of presentations at the 
-following conferences (_presenter in **bold**_):
-    
-*   [**Hendrickx, G.G.**](https://orcid.org/0000-0001-9523-7657),
-    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817),
-    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257),
-    [Huismans, Y.](https://orcid.org/0000-0001-6537-6111),
-    [Kranenburg, W.M.](https://orcid.org/0000-0002-4736-7913), and
-    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341)
-    March 4, 2022.
-    Combining machine learning and process-based models to enhance the understanding of estuarine salt intrusion and
-    development of estuary-scale nature-based solutions. 
-    _Ocean Sciences Meeting 2022_.
-    Online.
-    
-*   [**Hendrickx, G.G.**](https://orcid.org/0000-0001-9523-7657),
-    [Antol&iacute;nez, J.A.A.](https://orcid.org/0000-0002-0694-4817),
-    [Herman, P.M.J.](https://orcid.org/0000-0003-2188-6341), and
-    [Aarninkhof, S.G.J.](https://orcid.org/0000-0002-4591-0257)
-    December 5, 2022.
-    Estuarine sensitivity to nature-based salt intrusion mitigation measures.
-    _37th International Conference on Coastal Engineering 2022_.
-    Sydney, Australia.
-
-## License
-This repository is licensed under [`Apache License 2.0`](LICENSE).
